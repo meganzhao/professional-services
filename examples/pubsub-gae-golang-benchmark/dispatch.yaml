@@ -1,0 +1,6 @@
+dispatch:
+  - url: "*/producer/*"
+    service: producer
+
+  - url: "glickbot-gae-skel.appspot.com/"
+    service: ui

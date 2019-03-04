@@ -1,0 +1,17 @@
+runtime: go111
+
+service: ui
+
+handlers:
+  - url: /
+    login: admin
+    script: auto
+
+basic_scaling:
+  max_instances: 1
+
+env_variables:
+  GAE_PROJECT_ID: 'glickbot-gae-skel'
+  GAE_PUBSUB_TOPIC: 'gae-skel'
+  #MEMCACHE_DEBUG: TRUE
+  #FORM_DEBUG: TRUE

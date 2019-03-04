@@ -1,0 +1,18 @@
+runtime: go111
+
+service: default
+
+handlers:
+  - url: /consumer/push
+    login: admin
+    script: auto
+
+  - url: /_ah/push-handlers/consumer
+    login: admin
+    script: auto
+
+env_variables:
+  GAE_PROJECT_ID: 'glickbot-gae-skel'
+  GAE_PUBSUB_TOPIC: 'gae-skel'
+  #MEMCACHE_DEBUG: TRUE
+  #DUMMY_DEBUG: TRUE

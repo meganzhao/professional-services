@@ -1,0 +1,19 @@
+runtime: go111
+
+service: producer
+
+handlers:
+  - url: /producer/start
+    login: admin
+    script: auto
+
+  - url: /producer/loop
+    login: admin
+    script: auto
+
+env_variables:
+  GAE_PROJECT_ID: 'glickbot-gae-skel'
+  GAE_PUBSUB_TOPIC: 'gae-skel'
+  #LOOP_DEBUG: TRUE
+  #TASK_DEBUG: TRUE
+  #PUBSUB_DEBUG: TRUE

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>{{.Title}}</title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+<body>
+<div class="container" role="main">
+    <div class="jumbotron">
+        <h1>Benchmark Config</h1>
+<form name="benchConfig">
+    <div class="form-group row">
+        <div class="col-sm-6">
+            <label>Rate Per Second</label>
+        </div>
+        <div class="col-sm-2">
+            <label>New</label>
+        </div>
+        <div class="col-sm2">
+            <label>Current</label>
+        </div>
+    </div>
+    <div class="form-group row">
+        <label for="RateMin" class="col-sm-1 col-form-label text-muted">Minimum</label>
+        <div class="col-sm-5">
+            <input type="range" class="slider" min="{{.MinAllowRate}}" max="{{.MaxAllowRate}}" value="{{.Config.Rate.Min}}" id="RateMin" name="RateMin">
+        </div>
+        <div class="col-sm-2">
+            <input type="text" id="RateMinDisplay" value="{{.Config.Rate.Min}}" size="5">
+        </div>
+        <div class="col-sm-2">
+            <input type="text" readonly value="{{.Config.Rate.Min}}" size="5" id="OldRateMin">
+        </div>
+    </div>
+    <div class="form-group row">
+        <label for="RateMax" class="col-sm-1 col-form-label text-muted">Maximum</label>
+        <div class="col-sm-5">
+            <input type="range" class="slider" min="{{.MinAllowRate}}" max="{{.MaxAllowRate}}" value="{{.Config.Rate.Max}}" id="RateMax" name="RateMax">
+        </div>
+        <div class="col-sm-2">
+            <input type="text" id="RateMaxDisplay" value="{{.Config.Rate.Max}}" size="5">
+        </div>
+        <div class="col-sm-2">
+            <input type="text" readonly value="{{.Config.Rate.Max}}" size="5" id="OldRateMax">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label>Memory Use in Bytes</label>
+    </div>
+    <div class="form-group row">
+        <label for="BytesMin" class="col-sm-1 col-form-label text-muted">Minimum</label>
+        <div class="col-sm-5">
+            <input type="range" class="slider" min="{{.MinAllowBytes}}" max="{{.MaxAllowBytes}}" value="{{.Config.MemoryUsage.MinBytes}}" id="BytesMin" name="BytesMin">
+        </div>
+        <div class="col-sm-2">
+            <input type="text" id="BytesMinDisplay" value="{{.Config.MemoryUsage.MinBytes}}" size="5">
+        </div>
+        <div class="col-sm-2">
+            <input type="text" readonly value="{{.Config.MemoryUsage.MinBytes}}" size="5" id="OldBytesMin">
+        </div>
+    </div>
+    <div class="form-group row">
+        <label for="BytesMax" class="col-sm-1 col-form-label text-muted">Maximum</label>
+        <div class="col-sm-5">
+            <input type="range" class="slider" min="{{.MinAllowBytes}}" max="{{.MaxAllowBytes}}" value="{{.Config.MemoryUsage.MaxBytes}}" id="BytesMax" name="BytesMax">
+        </div>
+        <div class="col-sm-2">
+            <input type="text" id="BytesMaxDisplay" value="{{.Config.MemoryUsage.MaxBytes}}" size="5">
+        </div>
+        <div class="col-sm-2">
+            <input type="text" readonly value="{{.Config.MemoryUsage.MaxBytes}}" size="5" id="OldBytesMax">
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label>Duration in Ms</label>
+    </div>
+    <div class="form-group row">
+        <label for="MsMin" class="col-sm-1 col-form-label text-muted">Minimum</label>
+        <div class="col-sm-5">
+            <input type="range" class="slider" min="{{.MinAllowMs}}" max="{{.MaxAllowMs}}" value="{{.Config.Duration.MinMs}}" id="MsMin" name="MsMin">
+        </div>
+        <div class="col-sm-2">
+            <input type="text" id="MsMinDisplay" value="{{.Config.Duration.MinMs}}" size="5">
+        </div>
+        <div class="col-sm-2">
+            <input type="text" readonly value="{{.Config.Duration.MinMs}}" size="5" id="OldMsMin">
+        </div>
+    </div>
+    <div class="form-group row">
+        <label for="MsMax" class="col-sm-1 col-form-label text-muted">Maximum</label>
+        <div class="col-sm-5">
+            <input type="range" class="slider" min="{{.MinAllowMs}}" max="{{.MaxAllowMs}}" value="{{.Config.Duration.MaxMs}}" id="MsMax" name="MsMax">
+        </div>
+        <div class="col-sm-2">
+            <input type="text" id="MsMaxDisplay" value="{{.Config.Duration.MaxMs}}" size="5">
+        </div>
+        <div class="col-sm-2">
+            <input type="text" readonly value="{{.Config.Duration.MaxMs}}" size="5" id="OldMsMax">
+        </div>
+    </div>
+    <input class="btn btn-primary" type="submit" name="Started" value="Update" onsubmit="window.location.reload();">
+    {{ if .Config.Started }}
+        <button type="submit" class="btn btn-danger" name="Started" value="Stop">Stop</button>
+        <button type="button" class="btn btn-secondary btn-lg" disabled>Running</button>
+    {{- else}}
+        <button type="submit" class="btn btn-success" name="Started" value="Start">Start</button>
+        <button type="button" class="btn btn-secondary btn-lg" disabled>Stopped</button>
+    {{- end}}
+
+</form>
+    </div>
+</div>
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script>
+    document.getElementById('RateMin').oninput = function(){
+        document.getElementById('RateMinDisplay').value=document.getElementById('RateMin').value;
+        if (Number(document.getElementById('RateMin').value) > Number(document.getElementById('RateMax').value)){
+            document.getElementById('RateMax').value=document.getElementById('RateMin').value;
+            document.getElementById('RateMaxDisplay').value=document.getElementById('RateMin').value;
+        }
+    }
+    document.getElementById('RateMinDisplay').oninput = function(){
+        document.getElementById('RateMin').value=document.getElementById('RateMinDisplay').value;
+        if (Number(document.getElementById('RateMinDisplay').value) > Number(document.getElementById('RateMax').value)){
+            document.getElementById('RateMax').value=document.getElementById('RateMinDisplay').value;
+            document.getElementById('RateMaxDisplay').value=document.getElementById('RateMinDisplay').value;
+        }
+    }
+    document.getElementById('RateMax').oninput = function(){
+        document.getElementById('RateMaxDisplay').value=document.getElementById('RateMax').value;
+        if (Number(document.getElementById('RateMax').value) < Number(document.getElementById('RateMin').value)){
+            document.getElementById('RateMin').value=document.getElementById('RateMax').value;
+            document.getElementById('RateMinDisplay').value=document.getElementById('RateMax').value;
+        }
+    }
+    document.getElementById('RateMaxDisplay').oninput = function(){
+        document.getElementById('RateMax').value=document.getElementById('RateMaxDisplay').value;
+        if (Number(document.getElementById('RateMaxDisplay').value) < Number(document.getElementById('RateMin').value)){
+            document.getElementById('RateMin').value=document.getElementById('RateMaxDisplay').value;
+            document.getElementById('RateMinDisplay').value=document.getElementById('RateMaxDisplay').value;
+        }
+    }
+
+    document.getElementById('BytesMin').oninput = function(){
+        document.getElementById('BytesMinDisplay').value=document.getElementById('BytesMin').value;
+        if (Number(document.getElementById('BytesMin').value) > Number(document.getElementById('BytesMax').value)){
+            document.getElementById('BytesMax').value=document.getElementById('BytesMin').value;
+            document.getElementById('BytesMaxDisplay').value=document.getElementById('BytesMin').value;
+        }
+    }
+    document.getElementById('BytesMinDisplay').oninput = function(){
+        document.getElementById('BytesMin').value=document.getElementById('BytesMinDisplay').value;
+        if (Number(document.getElementById('BytesMinDisplay').value) > Number(document.getElementById('BytesMax').value)){
+            document.getElementById('BytesMax').value=document.getElementById('BytesMinDisplay').value;
+            document.getElementById('BytesMaxDisplay').value=document.getElementById('BytesMinDisplay').value;
+        }
+    }
+    document.getElementById('BytesMax').oninput = function(){
+        document.getElementById('BytesMaxDisplay').value=document.getElementById('BytesMax').value;
+        if (Number(document.getElementById('BytesMax').value) < Number(document.getElementById('BytesMin').value)){
+            document.getElementById('BytesMin').value=document.getElementById('BytesMax').value;
+            document.getElementById('BytesMinDisplay').value=document.getElementById('BytesMax').value;
+        }
+    }
+    document.getElementById('BytesMaxDisplay').oninput = function(){
+        document.getElementById('BytesMax').value=document.getElementById('BytesMaxDisplay').value;
+        if (Number(document.getElementById('BytesMaxDisplay').value) < Number(document.getElementById('BytesMin').value)){
+            document.getElementById('BytesMin').value=document.getElementById('BytesMaxDisplay').value;
+            document.getElementById('BytesMinDisplay').value=document.getElementById('BytesMaxDisplay').value;
+        }
+    }
+    document.getElementById('MsMin').oninput = function(){
+        document.getElementById('MsMinDisplay').value=document.getElementById('MsMin').value;
+        if (Number(document.getElementById('MsMin').value) > Number(document.getElementById('MsMax').value)){
+            document.getElementById('MsMax').value=document.getElementById('MsMin').value;
+            document.getElementById('MsMaxDisplay').value=document.getElementById('MsMin').value;
+        }
+    }
+    document.getElementById('MsMinDisplay').oninput = function(){
+        document.getElementById('MsMin').value=document.getElementById('MsMinDisplay').value;
+        if (Number(document.getElementById('MsMinDisplay').value) > Number(document.getElementById('MsMax').value)){
+            document.getElementById('MsMax').value=document.getElementById('MsMinDisplay').value;
+            document.getElementById('MsMaxDisplay').value=document.getElementById('MsMinDisplay').value;
+        }
+    }
+    document.getElementById('MsMax').oninput = function(){
+        document.getElementById('MsMaxDisplay').value=document.getElementById('MsMax').value;
+        if (Number(document.getElementById('MsMax').value) < Number(document.getElementById('MsMin').value)){
+            document.getElementById('MsMin').value=document.getElementById('MsMax').value;
+            document.getElementById('MsMinDisplay').value=document.getElementById('MsMax').value;
+        }
+    }
+    document.getElementById('MsMaxDisplay').oninput = function(){
+        document.getElementById('MsMax').value=document.getElementById('MsMaxDisplay').value;
+        if (Number(document.getElementById('MsMaxDisplay').value) < Number(document.getElementById('MsMin').value)){
+            document.getElementById('MsMin').value=document.getElementById('MsMaxDisplay').value;
+            document.getElementById('MsMinDisplay').value=document.getElementById('MsMaxDisplay').value;
+        }
+    }
+
+</script>
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<!-- Latest compiled and minified CSS -->
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+</body>
+</html>
