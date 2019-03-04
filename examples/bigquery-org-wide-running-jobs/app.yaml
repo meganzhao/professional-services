@@ -1,0 +1,14 @@
+runtime: go111
+
+handlers:
+- url: /_ah/push-handlers/.*
+  login: admin
+  script: auto
+
+- url: /_ah/get-handlers/.*
+  login: admin
+  script: auto
+
+- url: /.*
+  login: admin
+  script: auto
