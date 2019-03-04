@@ -48,6 +48,13 @@ The UI has the variable settings, and start/stop for the producer to tell the co
                                    +--+                  |                   
                                       +------------------+                   
 
+
+## Current Status
+
+Each piece above is working, which makes this a useable/useful skeleton project to use as boilerplate for any similar type of Golang AppEngine service.
+
+![](images/UIScreenshot.png)
+
 #### Ideas for further investigation
 
 * How does GAE behave in golang standard as the memory footprint of each request increases?
@@ -59,4 +66,5 @@ The UI has the variable settings, and start/stop for the producer to tell the co
 
 * Add example Stackdriver dashboard configurations
 * Add tests, use dev_appserver.py in tests
+* Add OpenCensus metric collection for better Consumer observability
 * Deploy using Terraform/CI/CD pipeline
