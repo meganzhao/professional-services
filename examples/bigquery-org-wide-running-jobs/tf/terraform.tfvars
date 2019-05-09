@@ -1,3 +1,3 @@
-topic = "tf-topic"
-project = "tuff-rocks-bootstrap"
-domain = "tuff.rocks"
+topic = "bq-top-topic"
+project = "bq-top-project"
+domain = "acme.com"
