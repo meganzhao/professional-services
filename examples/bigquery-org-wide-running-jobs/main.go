@@ -60,7 +60,7 @@ type JobDetail struct {
 	Priority      string
 	StatementType string
 	Timeline      []TimelineSample
-	SlotMillis    int64
+	SlotMillis    []int64
 	Updated       time.Time
 }
 
@@ -187,7 +187,7 @@ type JobDisplay struct {
 	Dst            string    `json:"dst,string"`
 	Priority       string    `json:"priority,string"`
 	StatementType  string    `json:"statementtype,string"`
-	SlotMillis     int64     `json:"slotmillis,number"`
+	SlotMillis     []int64     `json:"slotmillis,number"`
 	Updated        time.Time    `json:"updated,datetime"`
 }
 
@@ -238,8 +238,8 @@ func (j *Job) GetDetail(bqj *bigquery.Job) error {
 			break
 		}
 		detail.StatementType = stats.StatementType
-		detail.Timeline = convertTimeline(stats.Timeline)
-		detail.SlotMillis = stats.SlotMillis
+		detail.Timeline = append(j.Detail.Timeline, convertTimeline(stats.Timeline)...)
+		detail.SlotMillis = append(j.Detail.SlotMillis, stats.SlotMillis)
 		tableNames := make([]string, len(stats.ReferencedTables))
 		for i, t := range stats.ReferencedTables {
 			tableNames[i] = t.FullyQualifiedName()
@@ -360,7 +360,7 @@ func main() {
 
 	r.HandleFunc("/_ah/push-handlers/bqo-pusher", pushHandler)
 
-	r.HandleFunc("/_ah/push-handlers/update-projects/", updateProjectJobsHandler)
+	r.HandleFunc("/_ah/push-handlers/update-projects/{project_id}", updateProjectJobsHandler)
 
 	r.HandleFunc("/_ah/push-handlers/update-projects-all", updateAllProjectsHandler)
 
@@ -661,9 +661,20 @@ func updateProjectJobs(ctx context.Context, project string) error {
 	}
 	dsJobs := make([]*Job, 0)
 	query := datastore.NewQuery("Job").Filter("Name.ProjectId =", project)
+	// runs the query in the given context ctx and returns all keys that match that query, 
+	// as well as appending the values to dsJobs
 	dsJobKeys, err := query.GetAll(ctx, &dsJobs)
 	if err != nil {
 		return err
+	}
+
+	for _, job := range dsJobs {
+		j, err := bqc.JobFromID(ctx, job.Name.JobId)
+		if err != nil {
+			return err
+		}
+		log.Debugf(ctx, "Calling detail %v\n", j)
+		job.GetDetail(j)
 	}
 
 	dsJobMap := make(map[string]*Job, len(dsJobs))
@@ -694,26 +705,26 @@ func updateProjectJobs(ctx context.Context, project string) error {
 		}
 	}
 
-	if len(dsJobMap) > 0 {
-		// Detected missing job from BQ running/pending list
-		deleteKeys := make([]*datastore.Key, len(dsJobMap))
-		dkIdx := 0
-		for k, _ := range dsJobMap {
-			// Go backwards through the loop since we might remove i
-			for i := len(dsJobKeys) - 1; i >= 0; i-- {
-				if k == dsJobKeys[i].StringID() {
-					deleteKeys[dkIdx] = dsJobKeys[i]
-					dkIdx++
-					dsJobKeys = append(dsJobKeys[:i], dsJobKeys[i+1:]...)
-					dsJobs = append(dsJobs[:i], dsJobs[i+1:]...)
-					break
-				}
-			}
-		}
-		if err := datastore.DeleteMulti(ctx, deleteKeys); err != nil {
-			log.Debugf(ctx, "Error deleteing %v keys: %v", len(deleteKeys), err)
-		}
-	}
+	// if len(dsJobMap) > 0 {
+	// 	// Detected missing job from BQ running/pending list
+	// 	deleteKeys := make([]*datastore.Key, len(dsJobMap))
+	// 	dkIdx := 0
+	// 	for k, _ := range dsJobMap {
+	// 		// Go backwards through the loop since we might remove i
+	// 		for i := len(dsJobKeys) - 1; i >= 0; i-- {
+	// 			if k == dsJobKeys[i].StringID() {
+	// 				deleteKeys[dkIdx] = dsJobKeys[i]
+	// 				dkIdx++
+	// 				dsJobKeys = append(dsJobKeys[:i], dsJobKeys[i+1:]...)
+	// 				dsJobs = append(dsJobs[:i], dsJobs[i+1:]...)
+	// 				break
+	// 			}
+	// 		}
+	// 	}
+	// 	if err := datastore.DeleteMulti(ctx, deleteKeys); err != nil {
+	// 		log.Debugf(ctx, "Error deleteing %v keys: %v", len(deleteKeys), err)
+	// 	}
+	// }
 
 	if _, err := datastore.PutMulti(ctx, dsJobKeys, dsJobs); err != nil {
 		fmt.Printf("Error saving keys: %v\n", err)
@@ -800,9 +811,9 @@ func jobComplete(ctx context.Context, j Job) error {
 			}
 		}
 	}
-	log.Debugf(ctx, "Deleting %v from Datastore\n", j.Name.String())
-	if err := datastore.Delete(ctx, k); err != nil {
-		return err
-	}
+	// log.Debugf(ctx, "Deleting %v from Datastore\n", j.Name.String())
+	// if err := datastore.Delete(ctx, k); err != nil {
+	// 	return err
+	// }
 	return nil
 }
