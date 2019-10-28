@@ -442,6 +442,7 @@ func updateAllProjectsHandler(w http.ResponseWriter, r *http.Request) {
 		log.Errorf(ctx, "Error retrieving project list: %v\n", err)
 	}
 
+	// create a task queue for each project
 	tasklist := make([]*taskqueue.Task, len(projects)+1)
 	for i, p := range projects {
 		tasklist[i] = &taskqueue.Task{
@@ -449,6 +450,7 @@ func updateAllProjectsHandler(w http.ResponseWriter, r *http.Request) {
 			Path:   fmt.Sprintf("/_ah/push-handlers/update-projects/%s", p),
 		}
 	}
+	// every 5 second populate the task queue again
 	tasklist[len(tasklist)-1] = &taskqueue.Task{
 		Method: "GET",
 		Path:   "/_ah/push-handlers/update-projects-all",
@@ -674,7 +676,10 @@ func updateProjectJobs(ctx context.Context, project string) error {
 			return err
 		}
 		log.Debugf(ctx, "Calling detail %v\n", j)
-		job.GetDetail(j)
+		// set condition to get job detail for running jobs only 
+		if job.Detail.State != "Done" {
+			job.GetDetail(j)
+		}
 	}
 
 	dsJobMap := make(map[string]*Job, len(dsJobs))
@@ -697,7 +702,10 @@ func updateProjectJobs(ctx context.Context, project string) error {
 			k := BqJobKey(j, project)
 			if job, exists := dsJobMap[k]; exists {
 				log.Debugf(ctx, "Getting detail for %v\n", k)
-				job.GetDetail(j)
+				// set condition to get job detail for running jobs only 
+				if job.Detail.State != "Done" {
+					job.GetDetail(j)
+				}				
 				delete(dsJobMap, k)
 			} else {
 				log.Debugf(ctx, "Couldn't find DS entry for %v\n", k)
@@ -726,6 +734,7 @@ func updateProjectJobs(ctx context.Context, project string) error {
 	// 	}
 	// }
 
+	// set condition for running jobs only 
 	if _, err := datastore.PutMulti(ctx, dsJobKeys, dsJobs); err != nil {
 		fmt.Printf("Error saving keys: %v\n", err)
 	}
