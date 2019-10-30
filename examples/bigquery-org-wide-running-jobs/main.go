@@ -59,6 +59,7 @@ type JobDetail struct {
 	Dst           string
 	Priority      string
 	StatementType string
+	Query		  string
 	Timeline      []TimelineSample
 	SlotMillis    []int64
 	Updated       time.Time
@@ -187,6 +188,7 @@ type JobDisplay struct {
 	Dst            string    `json:"dst,string"`
 	Priority       string    `json:"priority,string"`
 	StatementType  string    `json:"statementtype,string"`
+	Query          string    `json:"query,string"`
 	SlotMillis     []int64     `json:"slotmillis,number"`
 	Updated        time.Time    `json:"updated,datetime"`
 }
@@ -238,6 +240,7 @@ func (j *Job) GetDetail(bqj *bigquery.Job) error {
 			break
 		}
 		detail.StatementType = stats.StatementType
+		detail.Query = fmt.Sprintf("%v", queryConfig.Q)
 		detail.Timeline = append(j.Detail.Timeline, convertTimeline(stats.Timeline)...)
 		detail.SlotMillis = append(j.Detail.SlotMillis, stats.SlotMillis)
 		tableNames := make([]string, len(stats.ReferencedTables))
@@ -408,6 +411,7 @@ func jobsHandler(w http.ResponseWriter, r *http.Request) {
 			j.Detail.Dst,
 			j.Detail.Priority,
 			j.Detail.StatementType,
+			j.Detail.Query,
 			j.Detail.SlotMillis,
 			j.Detail.Updated,
 		}
