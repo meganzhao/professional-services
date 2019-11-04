@@ -414,6 +414,8 @@ func main() {
 
 	r.HandleFunc("/_ah/get-handlers/v1/jobs", jobsHandler)
 
+	r.HandleFunc("/_ah/get-handlers/v1/jobs/{start-time}/{end-time}", startEndTimeJobsHandler)
+
 	r.HandleFunc("/stats", statsHandler)
 
 	r.HandleFunc("/", listHandler)
@@ -427,6 +429,95 @@ func main() {
 	appengine.Main()
 
 }
+
+func startEndTimeJobsHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+	// startTimeStr format as time.Time (not print out format in Datastore)
+	// time input in the format of RFC3339
+	timeStrings := strings.TrimPrefix(r.URL.Path, "/_ah/get-handlers/v1/jobs/")
+
+	timeStringsArr := strings.Split(timeStrings, "/")
+	startTimeStr, endTimeStr := timeStringsArr[0], timeStringsArr[1]
+
+	startTime, err := time.Parse(time.RFC3339, startTimeStr)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error getting starttime: %v", err), http.StatusBadRequest)
+		return		
+	}
+	log.Debugf(ctx, "startTime: %v", startTime)
+
+	endTime, err := time.Parse(time.RFC3339, endTimeStr)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error getting endtime: %v", err), http.StatusBadRequest)
+		return		
+	}
+	log.Debugf(ctx, "endTime: %v", endTime)
+
+	jobsStartTimeValid := make([]*Job, 0)
+	query := datastore.NewQuery("Job").Filter("Stats.StartTime <=", endTime)
+	//query := datastore.NewQuery("Job")
+	log.Debugf(ctx, "Filtered query: %v", query)
+	_, err = query.GetAll(ctx, &jobsStartTimeValid)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error getting jobs: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	jobs := make([]*Job, 0)
+	for _, j := range jobsStartTimeValid {
+		if j.Stats.EndTime.After(startTime) {
+			jobs = append(jobs, j)
+		}
+	}
+
+	jobsDisplay := make([]*JobDisplay, len(jobs))
+	for i, j := range jobs {
+		jobsDisplay[i] = &JobDisplay{
+			j.Stats.CreateTime,
+			j.Stats.StartTime,
+			j.Name.ProjectId,
+			j.Name.JobId,
+			j.Name.Location,
+			0,
+			0,
+			0,
+			j.Detail.Type,
+			j.Detail.State,
+			j.Detail.Error,
+			j.Detail.Email,
+			j.Detail.Src,
+			j.Detail.Dst,
+			j.Detail.Priority,
+			j.Detail.StatementType,
+			j.Detail.Query,
+			j.Detail.SlotMillis,
+			j.Detail.Updated,
+			j.Detail.ReservationID,
+			j.Detail.Slots,
+		}
+		if len(j.Detail.Timeline) > 0 {
+			jobsDisplay[i].ActiveUnits = j.Detail.Timeline[0].ActiveUnits
+			jobsDisplay[i].CompletedUnits = j.Detail.Timeline[0].CompletedUnits
+			jobsDisplay[i].PendingUnits = j.Detail.Timeline[0].PendingUnits
+		}
+	}
+	data := struct{
+		Data []*JobDisplay `json:"data"`
+	}{
+		jobsDisplay,
+	}
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error marshaling jobs to json: %v", err), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if _, err := w.Write(jsonData); err != nil {
+		http.Error(w, fmt.Sprintf("Error writing output: %v", err), http.StatusInternalServerError)
+		return
+	}
+}
+
 
 func jobsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
