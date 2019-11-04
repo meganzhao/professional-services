@@ -63,6 +63,8 @@ type JobDetail struct {
 	Timeline      []TimelineSample
 	SlotMillis    []int64
 	Updated       time.Time
+	ReservationID string
+	Slots 		  int64
 }
 
 type TimelineSample struct {
@@ -191,6 +193,8 @@ type JobDisplay struct {
 	Query          string    `json:"query,string"`
 	SlotMillis     []int64     `json:"slotmillis,number"`
 	Updated        time.Time    `json:"updated,datetime"`
+	ReservationID  string 	 `json:"reservationid,string"`
+	Slots          int64	 `json:"slots,number"`
 }
 
 type DisplayField struct {
@@ -211,7 +215,7 @@ func GetJobDisplayFields() []DisplayField {
 	return fields
 }
 
-func (j *Job) GetDetail(bqj *bigquery.Job) error {
+func (j *Job) GetDetail(bqj *bigquery.Job, bqc *bigquery.Client, ctx context.Context) error {
 	status := bqj.LastStatus()
 	detail := JobDetail{
 		Email:   bqj.Email(),
@@ -220,6 +224,47 @@ func (j *Job) GetDetail(bqj *bigquery.Job) error {
 	}
 	if status.Err() != nil {
 		detail.Error = fmt.Sprintf("%v", status.Err())
+	}
+	
+	q := bqc.Query(`
+			SELECT reservation_id, slots 
+			FROM` + "`festive-terrain-254614.slot_reservation.slot_reservation_1`" + 
+			`WHERE project_id = @project_id
+		`)
+	q.Parameters = []bigquery.QueryParameter{
+		{
+			Name: "project_id",
+			Value: j.Name.ProjectId,
+		},
+	}
+	it, err := q.Read(ctx)
+	if err != nil {
+		// TODO: Handle error.
+	}
+
+	type ReservationQuery struct {
+		Reservation_ID string
+		Slots int64
+	}
+	
+	// each project only has one reservation
+	for {
+		var reservation_slot ReservationQuery
+		//var reservation_slot []bigquery.Value
+		err := it.Next(&reservation_slot)
+		log.Debugf(ctx, "iteration starts")
+		if err == iterator.Done {
+			break
+		}
+		log.Debugf(ctx, "iteration ends one round")
+		if err != nil {
+			// TODO: Handle error.
+		}
+		// [reservation_0 %!s(int64=4)]
+		log.Debugf(ctx, "project ID: %s\n", j.Name.ProjectId)
+		log.Debugf(ctx, "Reservation queriesssss %s\n", reservation_slot)
+		detail.ReservationID = reservation_slot.Reservation_ID
+		detail.Slots = reservation_slot.Slots
 	}
 
 	config, err := bqj.Config()
@@ -414,6 +459,8 @@ func jobsHandler(w http.ResponseWriter, r *http.Request) {
 			j.Detail.Query,
 			j.Detail.SlotMillis,
 			j.Detail.Updated,
+			j.Detail.ReservationID,
+			j.Detail.Slots,
 		}
 		if len(j.Detail.Timeline) > 0 {
 			jobsDisplay[i].ActiveUnits = j.Detail.Timeline[0].ActiveUnits
@@ -441,6 +488,7 @@ func jobsHandler(w http.ResponseWriter, r *http.Request) {
 func updateAllProjectsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	projects, err := getProjectList(ctx)
+
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error retrieving project list: %v", err), http.StatusBadRequest)
 		log.Errorf(ctx, "Error retrieving project list: %v\n", err)
@@ -655,7 +703,7 @@ func updateJob(ctx context.Context, job *Job) error {
 	if _, err := j.Status(ctx); err != nil {
 		log.Debugf(ctx, "Couldn't get job status: %v", err)
 	} else {
-		job.GetDetail(j)
+		job.GetDetail(j, bqc, ctx)
 	}
 	return nil
 }
@@ -675,6 +723,7 @@ func updateProjectJobs(ctx context.Context, project string) error {
 	}
 
 	for _, job := range dsJobs {
+		// require job hosted project give app engine sa bigquery admin permission
 		j, err := bqc.JobFromID(ctx, job.Name.JobId)
 		if err != nil {
 			return err
@@ -682,7 +731,7 @@ func updateProjectJobs(ctx context.Context, project string) error {
 		log.Debugf(ctx, "Calling detail %v\n", j)
 		// set condition to get job detail for running jobs only 
 		if job.Detail.State != "Done" {
-			job.GetDetail(j)
+			job.GetDetail(j, bqc, ctx)
 		}
 	}
 
@@ -708,7 +757,7 @@ func updateProjectJobs(ctx context.Context, project string) error {
 				log.Debugf(ctx, "Getting detail for %v\n", k)
 				// set condition to get job detail for running jobs only 
 				if job.Detail.State != "Done" {
-					job.GetDetail(j)
+					job.GetDetail(j, bqc, ctx)
 				}				
 				delete(dsJobMap, k)
 			} else {
