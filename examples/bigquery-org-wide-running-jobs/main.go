@@ -226,46 +226,46 @@ func (j *Job) GetDetail(bqj *bigquery.Job, bqc *bigquery.Client, ctx context.Con
 		detail.Error = fmt.Sprintf("%v", status.Err())
 	}
 	
-	q := bqc.Query(`
-			SELECT reservation_id, slots 
-			FROM` + "`festive-terrain-254614.slot_reservation.slot_reservation_1`" + 
-			`WHERE project_id = @project_id
-		`)
-	q.Parameters = []bigquery.QueryParameter{
-		{
-			Name: "project_id",
-			Value: j.Name.ProjectId,
-		},
-	}
-	it, err := q.Read(ctx)
-	if err != nil {
-		// TODO: Handle error.
-	}
+	// q := bqc.Query(`
+	// 		SELECT reservation_id, slots 
+	// 		FROM` + "`festive-terrain-254614.slot_reservation.slot_reservation_1`" + 
+	// 		`WHERE project_id = @project_id
+	// 	`)
+	// q.Parameters = []bigquery.QueryParameter{
+	// 	{
+	// 		Name: "project_id",
+	// 		Value: j.Name.ProjectId,
+	// 	},
+	// }
+	// it, err := q.Read(ctx)
+	// if err != nil {
+	// 	// TODO: Handle error.
+	// }
 
-	type ReservationQuery struct {
-		Reservation_ID string
-		Slots int64
-	}
+	// type ReservationQuery struct {
+	// 	Reservation_ID string
+	// 	Slots int64
+	// }
 	
-	// each project only has one reservation
-	for {
-		var reservation_slot ReservationQuery
-		//var reservation_slot []bigquery.Value
-		err := it.Next(&reservation_slot)
-		log.Debugf(ctx, "iteration starts")
-		if err == iterator.Done {
-			break
-		}
-		log.Debugf(ctx, "iteration ends one round")
-		if err != nil {
-			// TODO: Handle error.
-		}
-		// [reservation_0 %!s(int64=4)]
-		log.Debugf(ctx, "project ID: %s\n", j.Name.ProjectId)
-		log.Debugf(ctx, "Reservation queriesssss %s\n", reservation_slot)
-		detail.ReservationID = reservation_slot.Reservation_ID
-		detail.Slots = reservation_slot.Slots
-	}
+	// // each project only has one reservation
+	// for {
+	// 	var reservation_slot ReservationQuery
+	// 	//var reservation_slot []bigquery.Value
+	// 	err := it.Next(&reservation_slot)
+	// 	log.Debugf(ctx, "iteration starts")
+	// 	if err == iterator.Done {
+	// 		break
+	// 	}
+	// 	log.Debugf(ctx, "iteration ends one round")
+	// 	if err != nil {
+	// 		// TODO: Handle error.
+	// 	}
+	// 	// [reservation_0 %!s(int64=4)]
+	// 	log.Debugf(ctx, "project ID: %s\n", j.Name.ProjectId)
+	// 	log.Debugf(ctx, "Reservation queriesssss %s\n", reservation_slot)
+	// 	detail.ReservationID = reservation_slot.Reservation_ID
+	// 	detail.Slots = reservation_slot.Slots
+	// }
 
 	config, err := bqj.Config()
 	if err != nil {

@@ -1,3 +1,3 @@
 topic = "bq-top-topic"
-project = "bq-top-project"
-domain = "acme.com"
+project = "festive-terrain-1"
+domain = "meganstudio.org"
