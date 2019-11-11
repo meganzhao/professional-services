@@ -1,0 +1,365 @@
+<html>
+<head>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
+	<script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+	
+	
+</head>
+<body class="has-navbar-fixed-top">
+
+	<section class="section has-background-info">
+		<div class="container">
+			<div class="row ">
+				<div class="columns">
+					<div class="column">
+						<nav class="navbar is-link is-fixed-top">
+							<a class="navbar-item has-text-white">Jobs</a>
+							<div class="navbar-end">
+								<div class="navbar-item">
+									<a id="livebutton" class="button is-success" href="#">
+										<span id="livestatus" class="icon">
+											<i class="fas fa-circle"></i>
+										</span>
+										<span>Live</span>
+									</a>
+								</div>
+								<div class="navbar-item ">
+									<a class="has-text-white">Hello a@abc.com</a>
+								</div>
+							</div>
+						</nav>
+					</div>
+				</div>	
+			</div>
+			<nav class="panel has-text-white has-background-white">
+				<p class="panel-heading">Playback Setting</p>
+
+				<div class="panel-block">
+					<div class="row">
+						<div class="column">
+							<div class="row">
+								<span>Duration:</span>
+							</div>
+							<div class="row">
+								<a>
+									<span id="d1h" class="tag is-medium">1hr
+									</span>
+								</a>
+								<a>
+									<span class="tag is-medium">2hr
+									</span>
+								</a>
+								<a>
+									<span class="tag is-medium">3hr
+									</span>	
+								</a>
+								<span class="tag has-background-white">
+									<input class="input" type="text" placeholder="Custom: e.g. 1h, 15m">
+								</span>	
+								
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="panel-block">
+					<div class="row">
+						<div class="column">
+							<div class="row">
+								<span>End time</span>
+							</div>
+							<div class="row">
+								<input class="input" type="text" placeholder="2019/10/29 23:59:59">
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="panel-block">
+					<div class="row">
+						<span class="column">
+							<span>
+								<button class="button is-info">Playback</button>
+							</span>
+						</span>
+					</div>
+				</div>
+
+
+			</nav>
+
+			<nav class="panel has-text-white has-background-white">
+				<p class="panel-heading">Reservation Usage</p>
+				<div class="panel-block">
+					<div class="row tile is-parent">
+						<div class="tile is-child " id="chart_div" style="width: 400px; height: 400px;">
+						</div>
+					</div>
+				</div>
+			</nav>
+			
+			<nav class="panel has-text-white has-background-white">
+				<p class="panel-heading">Search Jobs</p>
+				<div class="panel-block">
+					<span class="column">
+					<div class="row tile is-parent">
+						<div class="row columns tile is-child ">
+							<div class="column is-four-fifths">
+								<input class="input" type="text" placeholder="Search [projectid:, jobid:, reservationid:, userid:]">
+							</div>
+							<div class="column">
+								<button class="button is-info">Search</button>
+							</div>
+						</div>	
+					</div>
+					</span>
+				</div>
+				<div class="panel-block">
+					<span class="column">
+					<div class="row tile is-parent">
+						<div class="tile  is-child">
+							<span class="tag is-medium has-background-info has-text-white">projectId:thd-edw-pr
+								<button class="delete is-small"></button>
+							</span>
+							<span class="tag is-medium has-background-info has-text-white">reservationid:/pac/thd/
+								<button class="delete is-small"></button>
+							</span>
+							<span class="tag is-medium has-background-info has-text-white">userid:abc@abc.com
+								<button class="delete is-small"></button>
+							</span>
+						</div>
+					</div>
+					</span>
+				</div>
+			</nav>
+			
+			
+			
+			<div class="row tile is-parent">
+				<div class="table-container tile is-child box">
+					<table class="table is-striped is-narrow is-hoverable is-fullwidth">
+						<thead>
+							<tr>
+
+								<th>Job Name</th>
+								<th>User</th>
+								<th>Project</th>
+								<th>Reservation</th>
+								<th>Number of Slots</th>
+								<th>Status</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td id='bq-job-123dfdh9sd9sdf7sd'><a>bq-job-123dfdh9sd9sdf7sd</a></td>
+								<td>aj@google.com</td>
+								<td>project1</td>
+								<td>Reservation1</td>
+								<td>300</td>
+								<td>
+									<progress class="progress" value="50" max="100">50%</progress>
+								</td>
+							</tr>
+							<tr>
+								<td>bq-job-74672-hqyekxy</td>
+								<td>aj@google.com</td>
+								<td>project1</td>
+								<td>Reservation1</td>
+								<td>200</td>
+								<td>
+									<progress class="progress" value="15" max="100">15%</progress>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+
+		
+		
+		<div class="modal">
+  			<div class="modal-background"></div>
+ 			<div class="modal-card">
+	    		<header class="modal-card-head">
+	      			<p class="modal-card-title">Job Performance</p>
+	    		</header>
+	    		<section class="modal-card-body">
+	      			<div id="curve_chart" ></div>
+	    		</section>
+	    		<footer class="modal-card-foot">
+	      			<button id='modal-close' class="button">Close</button>
+	    		</footer>
+  			</div>
+		</div>
+		
+		
+	</section>
+	
+	<script type="text/javascript">
+		$( "#bq-job-123dfdh9sd9sdf7sd" ).click(function() {
+			$(".modal").addClass("is-active");
+			drawChartLine();
+		});
+		$( "#modal-close" ).click(function() {
+			$(".modal").removeClass("is-active");
+		});
+		$( "#modal-close1" ).click(function() {
+			$(".modal").removeClass("is-active");
+		});
+		var isLive = false;
+		var d1h = false;
+		$( "#livebutton" ).click(function() {
+			if (!isLive) {
+				$("#livestatus").addClass("has-text-danger");
+				isLive = true;
+			} else {
+				$("#livestatus").removeClass("has-text-danger");
+				isLive = false;
+			}
+		});
+		$( "#d1h" ).click(function() {
+			
+			if (!d1h) {
+				$("#d1h").addClass("has-background-info has-text-white");
+				d1h = true;
+			} else {
+				$("#d1h").removeClass("has-background-info has-text-white");
+				d1h = false;
+			}
+		});
+
+		google.charts.load('current', {'packages':['treemap']});
+		google.charts.setOnLoadCallback(drawChart);
+
+		function drawChart() {
+			var data = google.visualization.arrayToDataTable([
+				['Location', 'Parent', 'Market trade volume (size)', 'Market increase/decrease (color)'],
+				['pac/thd/',    null,                 0,                               0],
+				['pac/thd/pr',   'pac/thd/',          0,                               0],
+				['Europe',    'pac/thd/',             0,                               0],
+				['pac/thd/npr',      'pac/thd/',      0,                               0],
+				['Australia', 'pac/thd/',             0,                               0],
+				['Africa',    'pac/thd/',             0,                               0],
+				['Brazil',    'pac/thd/pr',           11,                              10],
+				['USA',       'pac/thd/pr',           52,                              31],
+				['Mexico',    'pac/thd/pr',           24,                              12],
+				['Canada',    'pac/thd/pr',           16,                             -23],
+				['France',    'Europe',             42,                              -11],
+				['Germany',   'Europe',             31,                              -2],
+				['Sweden',    'Europe',             22,                              -13],
+				['Italy',     'Europe',             17,                              4],
+				['UK',        'Europe',             21,                              -5],
+				['China',     'pac/thd/npr',               36,                              4],
+				['Japan',     'pac/thd/npr',               20,                              -12],
+				['India',     'pac/thd/npr',               40,                              63],
+				['Laos',      'pac/thd/npr',               4,                               34],
+				['Mongolia',  'pac/thd/npr',               1,                               -5],
+				['Israel',    'pac/thd/npr',               12,                              24],
+				['Iran',      'pac/thd/npr',               18,                              13],
+				['Pakistan',  'pac/thd/npr',               11,                              -52],
+				['Egypt',     'Africa',             21,                              0],
+				['S. Africa', 'Africa',             30,                              43],
+				['Sudan',     'Africa',             12,                              2],
+				['Congo',     'Africa',             10,                              12],
+				['Zaire',     'Africa',             8,                               10]
+				]);
+
+			
+			tree = new google.visualization.TreeMap(document.getElementById('chart_div'));
+			tree.draw(data, {
+				minColor: '#007000',
+				midColor: '#FFBF00',
+				maxColor: '#D2222D',
+				headerHeight: 25,
+				fontColor: 'black'
+				,showScale: true
+			});
+
+			google.visualization.events.addListener(tree, 'select', function(){
+				var selectedItem = tree.getSelection()[0];
+				var size = 10;
+				var value = 20;
+			    if (selectedItem) {
+			      var row = selectedItem.row;
+			      //alert('The user selected ' + value);
+			      alert(
+           '' + data.getValue(row, 0) +
+           ', ' + data.getValue(row, 1) + 
+           ', ' + data.getValue(row, 2) +
+           ', ' + data.getValue(row, 3) + 
+           ', ' +
+           'Datatable row: ' + row + 
+           ', ' + data.getColumnLabel(2) +
+           ' (total value of this cell and its children): ' + size + 
+           ', ' + data.getColumnLabel(3) + 
+           ': ' + value );
+			    }
+				
+			});
+		}
+
+		google.charts.load('current', {'packages':['corechart']});
+      	google.charts.setOnLoadCallback(drawChartLine);
+
+      	function drawChartLine() {
+        	var data = google.visualization.arrayToDataTable([
+	          	['Time', 'Pending Units', 'Total Units'],
+	          	['10:01:01',  4000,      4000],
+	          	['10:01:02',  3900,      4000],
+	          	['10:01:03',  3800,       4000],
+	          	['10:01:04',  3200,      4000],
+	          	['10:01:05',  2800,      4000],
+	          	['10:01:06',  2700,      4000],
+	          	['10:01:07',  2600,      4000],
+	          	['10:01:08',  2500,      4000],
+	          	['10:01:09',  1400,      4000],
+	          	['10:01:10',  1390,      4000],
+	          	['10:01:11',  1380,      4000],
+	          	['10:01:12',  1290,      4000],
+	          	['10:01:13',  1270,      4000],
+	          	['10:01:14',  1250,      4000],
+	          	['10:01:15',  1180,      4000],
+	          	['10:01:16',  1150,      4000],
+	          	['10:01:17',  1100,      4000],
+	          	['10:01:18',  1080,      4000],
+	          	['10:01:19',  1070,      4000],
+	          	['10:01:20',  1060,      4000],
+	          	['10:01:21',  1050,      4000],
+	          	['10:01:22',  1040,      4000],
+	          	['10:01:23',  1030,      4000],
+	          	['10:01:24',  1030,      4000],
+	          	['10:01:25',  1030,      4000],
+	          	['10:01:26',  1030,      4000],
+        		]);
+        	
+	        var options = {
+	          	pointSize: 2,
+	          	curveType: 'function',
+	          	legend: 'top',
+	          	height: 600,
+	          	width: 600,
+	          	chartArea: {'width': '85%', 'height': '70%'},
+		        hAxis: {
+    				title: 'Timeline', 
+    				slantedText: true,
+    				gridlines: {
+	                	count: 11
+	            	}
+				},
+				vAxis: {
+      				title: 'Pending Units', 
+      				textStyle: {fontSize: 10},
+      				gridlines: {
+	                	count: 10
+	            	}
+    			}
+	        };
+
+        	var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
+
+        	chart.draw(data, options);
+      	}
+	</script>
+</body>
+</html>
