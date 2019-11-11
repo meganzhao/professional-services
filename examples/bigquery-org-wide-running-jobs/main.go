@@ -182,6 +182,7 @@ func StateString(s bigquery.State) string {
 type JobDisplay struct {
 	CreateTime     time.Time `json:"createtime,string"`
 	StartTime      time.Time `json:"starttime,string"`
+	EndTime		   time.Time `json:"endtime,string"`
 	ProjectID      string    `json:"projectid,string"`
 	JobID          string    `json:"jobid,string"`
 	Location       string    `json:"location,string"`
@@ -509,6 +510,7 @@ func startEndTimeJobsHandler(w http.ResponseWriter, r *http.Request) {
 		jobsDisplay[i] = &JobDisplay{
 			j.Stats.CreateTime,
 			j.Stats.StartTime,
+			j.Stats.EndTime,
 			j.Name.ProjectId,
 			j.Name.JobId,
 			j.Name.Location,
@@ -567,6 +569,7 @@ func jobsHandler(w http.ResponseWriter, r *http.Request) {
 		jobsDisplay[i] = &JobDisplay{
 			j.Stats.CreateTime,
 			j.Stats.StartTime,
+			j.Stats.EndTime,
 			j.Name.ProjectId,
 			j.Name.JobId,
 			j.Name.Location,
@@ -1093,6 +1096,20 @@ func jobComplete(ctx context.Context, j Job) error {
 			}
 		}
 	}
+
+	var existedJob Job
+	err := datastore.Get(ctx, k, &existedJob)
+	if err != nil {
+		log.Debugf(ctx, "Can't retrieve job entry from Datastore")
+	}
+	existedJob.Stats.EndTime = j.Stats.EndTime
+	existedJob.Detail.Error = j.Detail.Error
+	existedJob.Detail.State = "Done"
+	log.Debugf(ctx, "Saving %v to Datastore\n", j.Name.String())
+	if _, err := datastore.Put(ctx, k, &existedJob); err != nil {
+		return err
+	}
+
 	// log.Debugf(ctx, "Deleting %v from Datastore\n", j.Name.String())
 	// if err := datastore.Delete(ctx, k); err != nil {
 	// 	return err
