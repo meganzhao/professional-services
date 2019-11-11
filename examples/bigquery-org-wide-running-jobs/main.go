@@ -53,7 +53,7 @@ func BqJobKey(j *bigquery.Job, p string) string {
 type Reservation struct {
 	Reservation_ID string
 	Project_ID string
-	Reservation_Slot float64
+	Reservation_Slot int64
 }
 
 type JobDetail struct {
@@ -70,7 +70,7 @@ type JobDetail struct {
 	SlotMillis    []int64
 	Updated       time.Time
 	ReservationID string
-	Slots 		  float64
+	Slots 		  int64
 }
 
 type TimelineSample struct {
@@ -182,7 +182,7 @@ func StateString(s bigquery.State) string {
 type JobDisplay struct {
 	CreateTime     time.Time `json:"createtime,string"`
 	StartTime      time.Time `json:"starttime,string"`
-	EndTime		   time.Time `json:"endtime,string"`
+	EndTime		   time.Time `json:"endtime,strinntg"`
 	ProjectID      string    `json:"projectid,string"`
 	JobID          string    `json:"jobid,string"`
 	Location       string    `json:"location,string"`
@@ -201,7 +201,7 @@ type JobDisplay struct {
 	SlotMillis     []int64     `json:"slotmillis,number"`
 	Updated        time.Time    `json:"updated,datetime"`
 	ReservationID  string 	 `json:"reservationid,string"`
-	Slots          float64	 `json:"slots,number"`
+	Slots          int64	 `json:"slots,number"`
 }
 
 type DisplayField struct {
@@ -784,7 +784,7 @@ func updateReservationHandler(w http.ResponseWriter, r *http.Request) {
 
 	type ReservationSlot struct {
 		Reservation_ID string
-		Reservation_Slot float64
+		Reservation_Slot int64
 	}	
 
 	// type Reservation struct {
@@ -942,8 +942,10 @@ func updateProjectJobs(ctx context.Context, project string) error {
 	// as well as appending the values to dsJobs
 	dsJobKeys, err := query.GetAll(ctx, &dsJobs)
 	if err != nil {
+		log.Debugf(ctx, "945: fine")
 		return err
 	}
+	log.Debugf(ctx, "948: fine")
 
 	for _, job := range dsJobs {
 		// require job hosted project give app engine sa bigquery admin permission
