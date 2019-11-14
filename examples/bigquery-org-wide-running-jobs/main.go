@@ -67,7 +67,7 @@ type JobDetail struct {
 	StatementType string
 	Query		  string
 	Timeline      []TimelineSample
-	SlotMillis    []int64
+	//SlotMillis    []int64
 	Updated       time.Time
 	ReservationID string
 	Slots 		  int64
@@ -198,7 +198,7 @@ type JobDisplay struct {
 	Priority       string    `json:"priority,string"`
 	StatementType  string    `json:"statementtype,string"`
 	Query          string    `json:"query,string"`
-	SlotMillis     []int64     `json:"slotmillis,number"`
+	//SlotMillis     []int64     `json:"slotmillis,number"`
 	Updated        time.Time    `json:"updated,datetime"`
 	ReservationID  string 	 `json:"reservationid,string"`
 	Slots          int64	 `json:"slots,number"`
@@ -249,56 +249,6 @@ func (j *Job) GetDetail(bqj *bigquery.Job, bqc *bigquery.Client, ctx context.Con
 	log.Debugf(ctx, "detail.ReservvationID: %v", detail.ReservationID)
 
 
-	// user := make([]*User, 0)
-	// q := datastore.NewQuery("Reservation").Filter("ProjectID =", id)
-	// // have to use a slice to save the result? or have to use getall?
-	// if _, err := dsClient.GetAll(ctx, q, &user); err != nil {
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 	return
-	// }
-	// res, _ := json.Marshal(&user)
-	// w.Write(res)
-	
-	// q := bqc.Query(`
-	// 		SELECT reservation_id, slots 
-	// 		FROM` + "`festive-terrain-254614.slot_reservation.slot_reservation_1`" + 
-	// 		`WHERE project_id = @project_id
-	// 	`)
-	// q.Parameters = []bigquery.QueryParameter{
-	// 	{
-	// 		Name: "project_id",
-	// 		Value: j.Name.ProjectId,
-	// 	},
-	// }
-	// it, err := q.Read(ctx)
-	// if err != nil {
-	// 	// TODO: Handle error.
-	// }
-
-	// type ReservationQuery struct {
-	// 	Reservation_ID string
-	// 	Slots int64
-	// }
-	
-	// // each project only has one reservation
-	// for {
-	// 	var reservation_slot ReservationQuery
-	// 	//var reservation_slot []bigquery.Value
-	// 	err := it.Next(&reservation_slot)
-	// 	log.Debugf(ctx, "iteration starts")
-	// 	if err == iterator.Done {
-	// 		break
-	// 	}
-	// 	log.Debugf(ctx, "iteration ends one round")
-	// 	if err != nil {
-	// 		// TODO: Handle error.
-	// 	}
-	// 	// [reservation_0 %!s(int64=4)]
-	// 	log.Debugf(ctx, "project ID: %s\n", j.Name.ProjectId)
-	// 	log.Debugf(ctx, "Reservation queriesssss %s\n", reservation_slot)
-	// 	detail.ReservationID = reservation_slot.Reservation_ID
-	// 	detail.Slots = reservation_slot.Slots
-	// }
 
 	config, err := bqj.Config()
 	if err != nil {
@@ -319,8 +269,9 @@ func (j *Job) GetDetail(bqj *bigquery.Job, bqc *bigquery.Client, ctx context.Con
 		}
 		detail.StatementType = stats.StatementType
 		detail.Query = fmt.Sprintf("%v", queryConfig.Q)
-		detail.Timeline = append(j.Detail.Timeline, convertTimeline(stats.Timeline)...)
-		detail.SlotMillis = append(j.Detail.SlotMillis, stats.SlotMillis)
+		log.Debugf(ctx, "before append: %v", time.Now().String())
+		log.Debugf(ctx, "stats:Timeline: %v", stats.Timeline)
+		detail.Timeline = convertTimeline(stats.Timeline)
 		tableNames := make([]string, len(stats.ReferencedTables))
 		for i, t := range stats.ReferencedTables {
 			tableNames[i] = t.FullyQualifiedName()
@@ -526,7 +477,7 @@ func startEndTimeJobsHandler(w http.ResponseWriter, r *http.Request) {
 			j.Detail.Priority,
 			j.Detail.StatementType,
 			j.Detail.Query,
-			j.Detail.SlotMillis,
+			//j.Detail.SlotMillis,
 			j.Detail.Updated,
 			j.Detail.ReservationID,
 			j.Detail.Slots,
@@ -585,7 +536,7 @@ func jobsHandler(w http.ResponseWriter, r *http.Request) {
 			j.Detail.Priority,
 			j.Detail.StatementType,
 			j.Detail.Query,
-			j.Detail.SlotMillis,
+			//j.Detail.SlotMillis,
 			j.Detail.Updated,
 			j.Detail.ReservationID,
 			j.Detail.Slots,
@@ -900,8 +851,11 @@ func pushHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getProjectList(ctx context.Context) ([]string, error) {
+	// should we worry about project ID be empty?
 	projectJobs := make([]Job, 0)
 	_, err := datastore.NewQuery("Job").
+		// filter may slow down perf
+		// Filter("Detail.State =", "Running").
 		Project("Name.ProjectId").
 		Distinct().GetAll(ctx, &projectJobs)
 	if err != nil {
