@@ -573,20 +573,23 @@ func updateAllProjectsHandler(w http.ResponseWriter, r *http.Request) {
 		log.Errorf(ctx, "Error retrieving project list: %v\n", err)
 	}
 
-	// create a task queue for each project
-	tasklist := make([]*taskqueue.Task, len(projects)+1)
-	for i, p := range projects {
-		tasklist[i] = &taskqueue.Task{
-			Method: "GET",
-			Path:   fmt.Sprintf("/_ah/push-handlers/update-projects/%s", p),
+	tasklist := make([]*taskqueue.Task, 0)
+	for _, p := range projects {
+		// filter out projects without names
+		if p != "" {
+			tasklist = append(tasklist, &taskqueue.Task{
+				Method: "GET",
+				Path:   fmt.Sprintf("/_ah/push-handlers/update-projects/%s", p),
+			})
 		}
 	}
+
 	// every 5 second populate the task queue again
-	tasklist[len(tasklist)-1] = &taskqueue.Task{
+	tasklist = append(tasklist, &taskqueue.Task{
 		Method: "GET",
 		Path:   "/_ah/push-handlers/update-projects-all",
 		Delay:  time.Second * 5,
-	}
+	})
 	if _, err := taskqueue.AddMulti(ctx, tasklist, ""); err != nil {
 		http.Error(w, fmt.Sprintf("Error enqueuing tasks: %v", err), http.StatusBadRequest)
 		log.Errorf(ctx, "Error enqueuing tasks: %v\n", err)
