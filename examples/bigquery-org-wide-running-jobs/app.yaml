@@ -12,3 +12,4 @@ handlers:
 - url: /.*
   login: admin
   script: auto
+
