@@ -404,7 +404,7 @@ func main() {
 
 	r.HandleFunc("/stats", statsHandler)
 
-	r.HandleFunc("/", listHandler)
+	// r.HandleFunc("/", listHandler)
 
 
 	// This will serve files under http://localhost:8000/static/<filename>
@@ -619,30 +619,30 @@ type templateIndexData struct {
 	UpdateInterval string
 }
 
-func listHandler(w http.ResponseWriter, r *http.Request) {
-	ctx := appengine.NewContext(r)
-	u := user.Current(ctx)
-	t := template.New("Bq Observer")
-	t, err := t.ParseFiles("./template/index.html")
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Coulnd't load template: %v", err), http.StatusBadRequest)
-		log.Errorf(ctx, "Couldn't load template: %v\n", err)
-		return
-	}
-	data := templateIndexData{
-		"1",
-		u,
-		"Job List",
-		jobDisplayFields,
-		"10000",
-	}
-	if err = t.ExecuteTemplate(w, "index.html", data); err != nil {
-		http.Error(w, fmt.Sprintf("Coulnd't print template: %v", err), http.StatusBadRequest)
-		log.Errorf(ctx, "Couldn't print template: %v\n", err)
-	}
+// func listHandler(w http.ResponseWriter, r *http.Request) {
+// 	ctx := appengine.NewContext(r)
+// 	u := user.Current(ctx)
+// 	t := template.New("Bq Observer")
+// 	t, err := t.ParseFiles("./template/index.html")
+// 	if err != nil {
+// 		http.Error(w, fmt.Sprintf("Coulnd't load template: %v", err), http.StatusBadRequest)
+// 		log.Errorf(ctx, "Couldn't load template: %v\n", err)
+// 		return
+// 	}
+// 	data := templateIndexData{
+// 		"1",
+// 		u,
+// 		"Job List",
+// 		jobDisplayFields,
+// 		"10000",
+// 	}
+// 	if err = t.ExecuteTemplate(w, "index.html", data); err != nil {
+// 		http.Error(w, fmt.Sprintf("Coulnd't print template: %v", err), http.StatusBadRequest)
+// 		log.Errorf(ctx, "Couldn't print template: %v\n", err)
+// 	}
 
-	return
-}
+// 	return
+// }
 
 func statsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)

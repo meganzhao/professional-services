@@ -1,6 +1,13 @@
 runtime: go111
 
 handlers:
+- url: /static/js
+  static_dir: static/js
+
+- url: /
+  static_files: template/index.html
+  upload: template/index.html
+
 - url: /_ah/push-handlers/.*
   login: admin
   script: auto
@@ -12,4 +19,6 @@ handlers:
 - url: /.*
   login: admin
   script: auto
+
+
 
