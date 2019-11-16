@@ -400,6 +400,8 @@ func main() {
 
 	r.HandleFunc("/_ah/get-handlers/v1/jobs", jobsHandler)
 
+	r.HandleFunc("/_ah/get-handlers/v1/jobid/{jobid}", jobIdHandler)
+
 	r.HandleFunc("/_ah/get-handlers/v1/jobs/{start-time}/{end-time}", startEndTimeJobsHandler)
 
 	r.HandleFunc("/stats", statsHandler)
@@ -509,6 +511,75 @@ func startEndTimeJobsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+
+func jobIdHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+	jobId := strings.TrimPrefix(r.URL.Path, "/_ah/get-handlers/v1/jobid/")
+	query := datastore.NewQuery("Job").Filter("Name.JobId =", jobId)
+	jobs := make([]*Job, 0)
+	_, err := query.GetAll(ctx, &jobs)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error getting jobs: %v", err), http.StatusBadRequest)
+		return
+	}
+	jobsDisplay := make([]*JobDisplay, len(jobs))
+	activeunits := make([]int64, 0)
+	completedunits := make([]int64, 0)
+	pendingunits := make([]int64, 0)
+
+	for i, j := range jobs {
+		jobsDisplay[i] = &JobDisplay{
+			j.Stats.CreateTime,
+			j.Stats.StartTime,
+			j.Stats.EndTime,
+			j.Name.ProjectId,
+			j.Name.JobId,
+			j.Name.Location,
+			activeunits,
+			completedunits,
+			pendingunits,
+			j.Detail.Type,
+			j.Detail.State,
+			j.Detail.Error,
+			j.Detail.Email,
+			j.Detail.Src,
+			j.Detail.Dst,
+			j.Detail.Priority,
+			j.Detail.StatementType,
+			j.Detail.Query,
+			//j.Detail.SlotMillis,
+			j.Detail.Updated,
+			j.Detail.ReservationID,
+			j.Detail.Slots,
+		}
+		if len(j.Detail.Timeline) > 0 {
+			for _, t := range j.Detail.Timeline {
+				jobsDisplay[i].ActiveUnits = append(jobsDisplay[i].ActiveUnits, t.ActiveUnits)
+				jobsDisplay[i].CompletedUnits = append(jobsDisplay[i].CompletedUnits, t.CompletedUnits)
+				jobsDisplay[i].PendingUnits = append(jobsDisplay[i].PendingUnits, t.PendingUnits)
+			}
+		}
+	}
+	data := struct{
+		Data []*JobDisplay `json:"data"`
+	}{
+		jobsDisplay,
+	}
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error marshaling jobs to json: %v", err), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if _, err := w.Write(jsonData); err != nil {
+		http.Error(w, fmt.Sprintf("Error writing output: %v", err), http.StatusInternalServerError)
+		return
+	}
+}
+
+
+
 
 
 func jobsHandler(w http.ResponseWriter, r *http.Request) {
