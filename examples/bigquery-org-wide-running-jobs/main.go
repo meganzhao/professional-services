@@ -189,6 +189,7 @@ type JobDisplay struct {
 	ActiveUnits    []int64   `json:"activeunits,number"`
 	CompletedUnits []int64   `json:"completedunits,number"`
 	PendingUnits   []int64   `json:"pendingunits,number"`
+	Elapsed    []int64   `json:"elapsed,number"`
 	Type           string    `json:"type,string"`
 	State          string    `json:"state,string"`
 	Error          string    `json:"error,string"`
@@ -462,6 +463,7 @@ func startEndTimeJobsHandler(w http.ResponseWriter, r *http.Request) {
 	activeunits := make([]int64, 0)
 	completedunits := make([]int64, 0)
 	pendingunits := make([]int64, 0)
+	elapsed := make([]int64, 0)
 	for i, j := range jobs {
 		jobsDisplay[i] = &JobDisplay{
 			j.Stats.CreateTime,
@@ -473,6 +475,7 @@ func startEndTimeJobsHandler(w http.ResponseWriter, r *http.Request) {
 			activeunits,
 			completedunits,
 			pendingunits,
+			elapsed,
 			j.Detail.Type,
 			j.Detail.State,
 			j.Detail.Error,
@@ -492,6 +495,7 @@ func startEndTimeJobsHandler(w http.ResponseWriter, r *http.Request) {
 				jobsDisplay[i].ActiveUnits = append(jobsDisplay[i].ActiveUnits, t.ActiveUnits)
 				jobsDisplay[i].CompletedUnits = append(jobsDisplay[i].CompletedUnits, t.CompletedUnits)
 				jobsDisplay[i].PendingUnits = append(jobsDisplay[i].PendingUnits, t.PendingUnits)
+				jobsDisplay[i].Elapsed = append(jobsDisplay[i].Elapsed, t.Elapsed)
 			}
 		}
 	}
@@ -527,7 +531,7 @@ func jobIdHandler(w http.ResponseWriter, r *http.Request) {
 	activeunits := make([]int64, 0)
 	completedunits := make([]int64, 0)
 	pendingunits := make([]int64, 0)
-
+	elapsed := make([]int64, 0)
 	for i, j := range jobs {
 		jobsDisplay[i] = &JobDisplay{
 			j.Stats.CreateTime,
@@ -539,6 +543,7 @@ func jobIdHandler(w http.ResponseWriter, r *http.Request) {
 			activeunits,
 			completedunits,
 			pendingunits,
+			elapsed,
 			j.Detail.Type,
 			j.Detail.State,
 			j.Detail.Error,
@@ -558,6 +563,7 @@ func jobIdHandler(w http.ResponseWriter, r *http.Request) {
 				jobsDisplay[i].ActiveUnits = append(jobsDisplay[i].ActiveUnits, t.ActiveUnits)
 				jobsDisplay[i].CompletedUnits = append(jobsDisplay[i].CompletedUnits, t.CompletedUnits)
 				jobsDisplay[i].PendingUnits = append(jobsDisplay[i].PendingUnits, t.PendingUnits)
+				jobsDisplay[i].Elapsed = append(jobsDisplay[i].Elapsed, t.Elapsed)
 			}
 		}
 	}
@@ -595,7 +601,7 @@ func jobsHandler(w http.ResponseWriter, r *http.Request) {
 	activeunits := make([]int64, 0)
 	completedunits := make([]int64, 0)
 	pendingunits := make([]int64, 0)
-
+	elapsed := make([]int64, 0)
 	for i, j := range jobs {
 		jobsDisplay[i] = &JobDisplay{
 			j.Stats.CreateTime,
@@ -607,6 +613,7 @@ func jobsHandler(w http.ResponseWriter, r *http.Request) {
 			activeunits,
 			completedunits,
 			pendingunits,
+			elapsed,
 			j.Detail.Type,
 			j.Detail.State,
 			j.Detail.Error,
@@ -626,6 +633,7 @@ func jobsHandler(w http.ResponseWriter, r *http.Request) {
 				jobsDisplay[i].ActiveUnits = append(jobsDisplay[i].ActiveUnits, t.ActiveUnits)
 				jobsDisplay[i].CompletedUnits = append(jobsDisplay[i].CompletedUnits, t.CompletedUnits)
 				jobsDisplay[i].PendingUnits = append(jobsDisplay[i].PendingUnits, t.PendingUnits)
+				jobsDisplay[i].Elapsed = append(jobsDisplay[i].Elapsed, t.Elapsed)
 			}
 		}
 	}
