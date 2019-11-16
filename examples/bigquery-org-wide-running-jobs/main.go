@@ -186,9 +186,9 @@ type JobDisplay struct {
 	ProjectID      string    `json:"projectid,string"`
 	JobID          string    `json:"jobid,string"`
 	Location       string    `json:"location,string"`
-	ActiveUnits    int64     `json:"activeunits,number"`
-	CompletedUnits int64     `json:"completedunits,number"`
-	PendingUnits   int64     `json:"pendingunits,number"`
+	ActiveUnits    []int64   `json:"activeunits,number"`
+	CompletedUnits []int64   `json:"completedunits,number"`
+	PendingUnits   []int64   `json:"pendingunits,number"`
 	Type           string    `json:"type,string"`
 	State          string    `json:"state,string"`
 	Error          string    `json:"error,string"`
@@ -457,6 +457,9 @@ func startEndTimeJobsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jobsDisplay := make([]*JobDisplay, len(jobs))
+	activeunits := make([]int64, 0)
+	completedunits := make([]int64, 0)
+	pendingunits := make([]int64, 0)
 	for i, j := range jobs {
 		jobsDisplay[i] = &JobDisplay{
 			j.Stats.CreateTime,
@@ -465,9 +468,9 @@ func startEndTimeJobsHandler(w http.ResponseWriter, r *http.Request) {
 			j.Name.ProjectId,
 			j.Name.JobId,
 			j.Name.Location,
-			0,
-			0,
-			0,
+			activeunits,
+			completedunits,
+			pendingunits,
 			j.Detail.Type,
 			j.Detail.State,
 			j.Detail.Error,
@@ -483,9 +486,11 @@ func startEndTimeJobsHandler(w http.ResponseWriter, r *http.Request) {
 			j.Detail.Slots,
 		}
 		if len(j.Detail.Timeline) > 0 {
-			jobsDisplay[i].ActiveUnits = j.Detail.Timeline[0].ActiveUnits
-			jobsDisplay[i].CompletedUnits = j.Detail.Timeline[0].CompletedUnits
-			jobsDisplay[i].PendingUnits = j.Detail.Timeline[0].PendingUnits
+			for _, t := range j.Detail.Timeline {
+				jobsDisplay[i].ActiveUnits = append(jobsDisplay[i].ActiveUnits, t.ActiveUnits)
+				jobsDisplay[i].CompletedUnits = append(jobsDisplay[i].CompletedUnits, t.CompletedUnits)
+				jobsDisplay[i].PendingUnits = append(jobsDisplay[i].PendingUnits, t.PendingUnits)
+			}
 		}
 	}
 	data := struct{
@@ -516,6 +521,10 @@ func jobsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	jobsDisplay := make([]*JobDisplay, len(jobs))
+	activeunits := make([]int64, 0)
+	completedunits := make([]int64, 0)
+	pendingunits := make([]int64, 0)
+
 	for i, j := range jobs {
 		jobsDisplay[i] = &JobDisplay{
 			j.Stats.CreateTime,
@@ -524,9 +533,9 @@ func jobsHandler(w http.ResponseWriter, r *http.Request) {
 			j.Name.ProjectId,
 			j.Name.JobId,
 			j.Name.Location,
-			0,
-			0,
-			0,
+			activeunits,
+			completedunits,
+			pendingunits,
 			j.Detail.Type,
 			j.Detail.State,
 			j.Detail.Error,
@@ -542,9 +551,11 @@ func jobsHandler(w http.ResponseWriter, r *http.Request) {
 			j.Detail.Slots,
 		}
 		if len(j.Detail.Timeline) > 0 {
-			jobsDisplay[i].ActiveUnits = j.Detail.Timeline[0].ActiveUnits
-			jobsDisplay[i].CompletedUnits = j.Detail.Timeline[0].CompletedUnits
-			jobsDisplay[i].PendingUnits = j.Detail.Timeline[0].PendingUnits
+			for _, t := range j.Detail.Timeline {
+				jobsDisplay[i].ActiveUnits = append(jobsDisplay[i].ActiveUnits, t.ActiveUnits)
+				jobsDisplay[i].CompletedUnits = append(jobsDisplay[i].CompletedUnits, t.CompletedUnits)
+				jobsDisplay[i].PendingUnits = append(jobsDisplay[i].PendingUnits, t.PendingUnits)
+			}
 		}
 	}
 	data := struct{
