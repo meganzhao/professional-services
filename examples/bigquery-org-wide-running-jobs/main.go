@@ -399,7 +399,7 @@ func main() {
 
 	r.HandleFunc("/_ah/push-handlers/update-projects-all", updateAllProjectsHandler)
 
-	r.HandleFunc("/_ah/get-handlers/v1/jobs", jobsHandler)
+	r.HandleFunc("/_ah/get-handlers/v1/jobs", jobsHandler).Methods("GET", "OPTIONS")
 
 	r.HandleFunc("/_ah/get-handlers/v1/jobid/{jobid}", jobIdHandler)
 
@@ -647,6 +647,7 @@ func jobsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Error marshaling jobs to json: %v", err), http.StatusInternalServerError)
 		return
 	}
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/json")
 	if _, err := w.Write(jsonData); err != nil {
 		http.Error(w, fmt.Sprintf("Error writing output: %v", err), http.StatusInternalServerError)

@@ -1,15 +1,18 @@
-
-
-$(document).ready(function() {
+$(document).ready(function () {
 	$('#job-table').DataTable( {
 		"ajax": {
 			"url": "https://festive-terrain-1.appspot.com/_ah/get-handlers/v1/jobs",
+			"complete": function() {
+				jobIdOnClick();
+			  }
 		},
-		"columns": [
+        "columns": [
 			{ "data": "jobid",
               'createdCell':  function (td, cellData, rowData, row, col) {
-                  $(td).html('<a class="jobID">' + cellData + '</a>');
-              }
+				  $(td).html('<a class="jobID" data-jobid=' + cellData + ">" + cellData + '</a>');
+				  // either add onclick to the element 
+				  // or call back async or wait
+                }
 			},
 			{ "data": "email" },
 			{ "data": "projectid" },
@@ -18,24 +21,32 @@ $(document).ready(function() {
 			{ "data": "state" },
 		]
 	} );
+	
 } );
 
-window.onload = function() {
-    var a = document.getElementsByClassName("jobID");
+function jobIdOnClick() {
+	alert("called function a");
+	var a = document.getElementsByClassName("jobID");
     for (i = 0; i < a.length; i++){
-        a[i].onclick = function() {
-            $(".modal").addClass("is-active");
-            drawChartLine();
+        a[i].onclick = function(e) {
+			// call https://festive-terrain-1.appspot.com/_ah/get-handlers/v1/jobid/{jobid}
+			const data = {"createtime":"2019-11-15T03:40:03.834Z","starttime":"2019-11-15T03:40:04.214Z","endtime":"2019-11-15T03:41:42.095Z","projectid":"\"festive-terrain-1\"","jobid":"\"bquxjob_32a27f2f_16e6d256f12\"","location":"\"US\"","activeunits":[1595,2729,2736,2737,2746,2639,1747,1749,1748,1742,1721,1702,1673,1663,1649,1648,1648,1646,1640,1635,1618,1603,1569,1527,1473,1414,1327,1254,1146,1025,890,753,611,509,410,350,360,312,264,194,158,136,126,108,100,90,70,38,20,10,2,127,253,425,639,1753,2900,3952,4781,5586,6036,6921,7153,7014,6954,6295,5984,2099,750,46,34,32,12,0,0,0],"completedunits":[2,2,2,2,2,1002,1002,1002,1003,1016,1038,1062,1087,1099,1103,1105,1108,1111,1116,1129,1143,1171,1204,1255,1319,1387,1457,1547,1656,1784,1919,2045,2173,2272,2381,2452,2538,2573,2597,2625,2640,2649,2652,2661,2666,2670,2689,2697,2705,2711,2712,2713,2713,2713,2714,2752,2835,2930,3092,3616,4340,4577,5404,5897,6346,6625,8955,11044,12686,12693,12696,12703,12712,12713,12713,12713],"pendingunits":[1600,2711,2711,2711,2711,1711,1711,1711,1710,1697,1675,1651,1626,1614,1610,1608,1605,1602,1597,1584,1570,1542,1509,1458,1394,1326,1256,1166,1057,929,794,668,540,441,332,261,175,140,116,88,73,64,61,52,47,43,24,16,8,2,1,10000,10000,10000,9999,9961,9878,9783,9621,9097,8373,8136,7309,6816,6367,6088,3758,1669,27,20,17,10,1,0,0,0],"elapsed":[735000000,1743000000,2865000000,4238000000,6177000000,7346000000,7851000000,10031000000,11176000000,12782000000,13837000000,14901000000,16075000000,17259000000,18641000000,19704000000,22250000000,23589000000,24933000000,26039000000,27130000000,28263000000,29301000000,30388000000,31394000000,32419000000,33446000000,34492000000,35502000000,36530000000,37546000000,38556000000,39573000000,40612000000,41626000000,42651000000,44162000000,45233000000,46303000000,47374000000,48661000000,49736000000,50988000000,52160000000,53277000000,54355000000,56492000000,57933000000,59113000000,61117000000,66162000000,68778000000,69815000000,70838000000,71842000000,72846000000,73854000000,74860000000,75865000000,76867000000,77869000000,78876000000,79882000000,80899000000,81939000000,82439000000,84320000000,87030000000,88038000000,89144000000,89786000000,91379000000,92435000000,93118000000,95552000000,97782000000],"type":"\"Query\"","state":"\"Done\"","error":"\"\"","email":"\"\"","src":"\"bigquery-public-data:austin_311.311_request,bigquery-public-data:austin_incidents.incidents_2016\"","dst":"\"festive-terrain-1:_b58ac6f2ae178e2f175a74e0ed5d5869c4deb2ac.anon5d629fb8a8dd77148fba186c0eb4105af9845e36\"","priority":"\"INTERACTIVE\"","statementtype":"\"SELECT\"","query":"\"select descript from `bigquery-public-data.austin_incidents.incidents_2016`\\ncross join `bigquery-public-data.austin_311.311_request`\\n\"","updated":"2019-11-15T03:41:42.489124Z","reservationid":"\"reservation_0\"","slots":50};
+			console.log("click");
+			console.log(e.srcElement.attributes.getNamedItem("data-jobid").value);
+			console.log(data);
+			$(".modal").addClass("is-active");
+            drawChartLine(data["activeunits"], data["completedunits"], data["pendingunits"], data["elapsed"]);
 	    };
-    }
+	}
+
+	$( "#modal-close" ).click(function() {
+		$(".modal").removeClass("is-active");
+	});
+	$( "#modal-close1" ).click(function() {
+		$(".modal").removeClass("is-active");
+	});
 }
 
-$( "#modal-close" ).click(function() {
-	$(".modal").removeClass("is-active");
-});
-$( "#modal-close1" ).click(function() {
-	$(".modal").removeClass("is-active");
-});
 var isLive = false;
 var interval;
 var d1h = false;
@@ -142,36 +153,28 @@ function drawChart() {
 google.charts.load('current', {'packages':['corechart']});
 google.charts.setOnLoadCallback(drawChartLine);
 
-function drawChartLine() {
-	var data = google.visualization.arrayToDataTable([
-		['Time', 'Pending Units', 'Total Units', 'Total Slots'],
-		['10:01:01',  4000,      4000, 100],
-		['10:01:02',  3900,      4000, 120],
-		['10:01:03',  3800,      4000, 120],
-		['10:01:04',  3200,      4000, 130],
-		['10:01:05',  2800,      4000, 140],
-		['10:01:06',  2700,      4000, 100],
-		['10:01:07',  2600,      4000, 80],
-		['10:01:08',  2500,      4000, 120],
-		['10:01:09',  1400,      4000, 140],
-		['10:01:10',  1390,      4000, 140],
-		['10:01:11',  1380,      4000, 200],
-		['10:01:12',  1290,      4000, 60],
-		['10:01:13',  1270,      4000, 70],
-		['10:01:14',  1250,      4000, 70],
-		['10:01:15',  1180,      4000, 80],
-		['10:01:16',  1150,      4000, 70],
-		['10:01:17',  1100,      4000, 120],
-		['10:01:18',  1080,      4000, 130],
-		['10:01:19',  1070,      4000, 140],
-		['10:01:20',  1060,      4000, 150],
-		['10:01:21',  1050,      4000, 160],
-		['10:01:22',  1040,      4000, 30],
-		['10:01:23',  1030,      4000, 40],
-		['10:01:24',  1030,      4000, 50],
-		['10:01:25',  1030,      4000, 60],
-		['10:01:26',  1030,      4000, 120],
-		]);
+function drawChartLine(activeunits, completedunits, pendingunits, elapsed) {
+	// TODO: cut all arrays to last 25
+
+	var dataArray = [['elapsed', 'activeunits', 'completedunits', 'pendingunits']];
+
+	if (activeunits === undefined || completedunits === undefined || 
+		pendingunits === undefined || elapsed === undefined) {
+		return;
+	} 
+
+	for (var n = 0; n < activeunits.length; n++) {
+		dataArray.push([elapsed[n], activeunits[n], completedunits[n], pendingunits[n]]);
+	}
+	console.log(dataArray);
+
+	var data = new google.visualization.arrayToDataTable(dataArray);
+
+	// var data = google.visualization.arrayToDataTable([
+	// 	['Time', 'Pending Units', 'Total Units', 'Total Slots'],
+	// 	['10:01:01',  4000,      4000, 100],
+	// 	['10:01:02',  3900,      4000, 120],
+	// 	]);
 	
 	var options = {
 		pointSize: 2,
