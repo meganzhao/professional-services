@@ -2,16 +2,16 @@ $(document).ready(function () {
 	$('#job-table').DataTable( {
 		"ajax": {
 			"url": "https://festive-terrain-1.appspot.com/_ah/get-handlers/v1/jobs",
-			"complete": function() {
-				jobIdOnClick();
-			  }
 		},
         "columns": [
 			{ "data": "jobid",
               'createdCell':  function (td, cellData, rowData, row, col) {
-				  $(td).html('<a class="jobID" data-jobid=' + cellData + ">" + cellData + '</a>');
-				  // either add onclick to the element 
-				  // or call back async or wait
+				  	$(td).html('<a>' + cellData + '</a>');
+					$(td).click(
+					  function() {
+						  queryJobInfo(rowData);
+					  }
+				  ); 
                 }
 			},
 			{ "data": "email" },
@@ -21,39 +21,17 @@ $(document).ready(function () {
 			{ "data": "state" },
 		]
 	} );
-	
-} );
-
-function jobIdOnClick() {
-	var a = document.getElementsByClassName("jobID");
-	console.log(a);
-    for (i = 0; i < a.length; i++){
-        a[i].onclick = function(e) {
-			const jobId = e.srcElement.attributes.getNamedItem("data-jobid").value
-			console.log(jobId);
-			fetch("https://festive-terrain-1.appspot.com/_ah/get-handlers/v1/jobid/" + jobId)
-				.then(response => {
-					return response.json()
-				})
-				.then(data => {
-					// Work with JSON data here
-					data = data["data"][0];
-					$(".modal").addClass("is-active");
-					drawChartLine(data["activeunits"], data["completedunits"], data["pendingunits"], data["elapsed"]);
-				})
-				.catch(err => {
-					// Do something for an error here
-					console.log(err);
-				})
-	    };
-	}
-
 	$( "#modal-close" ).click(function() {
 		$(".modal").removeClass("is-active");
 	});
 	$( "#modal-close1" ).click(function() {
 		$(".modal").removeClass("is-active");
 	});
+} );
+
+function queryJobInfo(rowData) {
+	$(".modal").addClass("is-active");
+	drawChartLine(rowData["activeunits"], rowData["completedunits"], rowData["pendingunits"], rowData["elapsed"]);
 }
 
 var isLive = false;
