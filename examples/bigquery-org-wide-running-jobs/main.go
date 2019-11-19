@@ -179,29 +179,56 @@ func StateString(s bigquery.State) string {
 	}
 }
 
+// type JobDisplay struct {
+// 	CreateTime     time.Time `json:"createtime,string"`
+// 	StartTime      time.Time `json:"starttime,string"`
+// 	EndTime		   time.Time `json:"endtime,string"`
+// 	ProjectID      string    `json:"projectid,string"`
+// 	JobID          string    `json:"jobid,string"`
+// 	Location       string    `json:"location,string"`
+// 	ActiveUnits    []int64   `json:"activeunits,number"`
+// 	CompletedUnits []int64   `json:"completedunits,number"`
+// 	PendingUnits   []int64   `json:"pendingunits,number"`
+// 	Elapsed    []int64   `json:"elapsed,number"`
+// 	Type           string    `json:"type,string"`
+// 	State          string    `json:"state,string"`
+// 	Error          string    `json:"error,string"`
+// 	Email          string    `json:"email,string"`
+// 	Src            string    `json:"src,string"`
+// 	Dst            string    `json:"dst,string"`
+// 	Priority       string    `json:"priority,string"`
+// 	StatementType  string    `json:"statementtype,string"`
+// 	Query          string    `json:"query,string"`
+// 	//SlotMillis     []int64     `json:"slotmillis,number"`
+// 	Updated        time.Time    `json:"updated,datetime"`
+// 	ReservationID  string 	 `json:"reservationid,string"`
+// 	Slots          int64	 `json:"slots,number"`
+// }
+
+
 type JobDisplay struct {
-	CreateTime     time.Time `json:"createtime,string"`
-	StartTime      time.Time `json:"starttime,string"`
-	EndTime		   time.Time `json:"endtime,strinntg"`
-	ProjectID      string    `json:"projectid,string"`
-	JobID          string    `json:"jobid,string"`
-	Location       string    `json:"location,string"`
-	ActiveUnits    []int64   `json:"activeunits,number"`
-	CompletedUnits []int64   `json:"completedunits,number"`
+	CreateTime     time.Time `json:"createtime,datetime"`
+	StartTime      time.Time `json:"starttime,datetime"`
+	EndTime		   time.Time `json:"endtime,datetime"`
+	ProjectID      string    `json:"projectid"`
+	JobID          string    `json:"jobid"`
+	Location       string    `json:"location"`
+	ActiveUnits    []int64   `json:"activeunits"`
+	CompletedUnits []int64   `json:"completedunits"`
 	PendingUnits   []int64   `json:"pendingunits,number"`
 	Elapsed    []int64   `json:"elapsed,number"`
-	Type           string    `json:"type,string"`
-	State          string    `json:"state,string"`
-	Error          string    `json:"error,string"`
-	Email          string    `json:"email,string"`
-	Src            string    `json:"src,string"`
-	Dst            string    `json:"dst,string"`
-	Priority       string    `json:"priority,string"`
-	StatementType  string    `json:"statementtype,string"`
-	Query          string    `json:"query,string"`
+	Type           string    `json:"type"`
+	State          string    `json:"state"`
+	Error          string    `json:"error"`
+	Email          string    `json:"email"`
+	Src            string    `json:"src"`
+	Dst            string    `json:"dst"`
+	Priority       string    `json:"priority"`
+	StatementType  string    `json:"statementtype"`
+	Query          string    `json:"query"`
 	//SlotMillis     []int64     `json:"slotmillis,number"`
 	Updated        time.Time    `json:"updated,datetime"`
-	ReservationID  string 	 `json:"reservationid,string"`
+	ReservationID  string 	 `json:"reservationid"`
 	Slots          int64	 `json:"slots,number"`
 }
 
