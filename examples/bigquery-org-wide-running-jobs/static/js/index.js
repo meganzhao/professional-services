@@ -1,9 +1,3 @@
-google.charts.load('current', { 'packages': ['treemap'] });
-// 
-
-google.charts.load('current', { 'packages': ['corechart'] });
-google.charts.setOnLoadCallback(drawChartLine);
-
 $(document).ready(function () {
 	$.ajax({ 
 		type: 'GET', 
@@ -11,16 +5,22 @@ $(document).ready(function () {
 		data: { get_param: 'value' }, 
 		dataType: 'json',
 		success: function (data) { 
-			google.charts.setOnLoadCallback(drawChart(data));
+			 // Load the Visualization API and the package and
+			 // set a callback to run when the Google Visualization API is loaded.
+			google.charts.load('current', {
+				'callback': function() {
+					drawChart(data);
+					jobList(data);
+				},
+				'packages': ['treemap', 'corechart'] });
 		}
 	});
+});
 
-
+function jobList(data) {
 	$('#job-table').DataTable({
 		// TODO: get data from variable
-		"ajax": {
-			"url": "https://festive-terrain-1.appspot.com/_ah/get-handlers/v1/jobs",
-		},
+		"data": data["data"],
 		"columns": [
 			{
 				"data": "jobid",
@@ -28,7 +28,8 @@ $(document).ready(function () {
 					$(td).html('<a>' + cellData + '</a>');
 					$(td).click(
 						function () {
-							queryJobInfo(rowData);
+							$(".modal").addClass("is-active");
+							drawChartLine(rowData["activeunits"], rowData["completedunits"], rowData["pendingunits"], rowData["elapsed"]);
 						}
 					);
 				}
@@ -46,11 +47,6 @@ $(document).ready(function () {
 	$("#modal-close1").click(function () {
 		$(".modal").removeClass("is-active");
 	});
-});
-
-function queryJobInfo(rowData) {
-	$(".modal").addClass("is-active");
-	drawChartLine(rowData["activeunits"], rowData["completedunits"], rowData["pendingunits"], rowData["elapsed"]);
 }
 
 var isLive = false;
