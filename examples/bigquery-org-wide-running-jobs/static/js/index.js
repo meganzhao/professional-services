@@ -9,7 +9,7 @@ $(document).ready(function () {
 			 // set a callback to run when the Google Visualization API is loaded.
 			google.charts.load('current', {
 				'callback': function() {
-					drawChart(data);
+					drawReservationChart(data);
 					jobList(data);
 				},
 				'packages': ['treemap', 'corechart'] });
@@ -17,37 +17,7 @@ $(document).ready(function () {
 	});
 });
 
-function jobList(data) {
-	$('#job-table').DataTable({
-		// TODO: get data from variable
-		"data": data["data"],
-		"columns": [
-			{
-				"data": "jobid",
-				'createdCell': function (td, cellData, rowData, row, col) {
-					$(td).html('<a>' + cellData + '</a>');
-					$(td).click(
-						function () {
-							$(".modal").addClass("is-active");
-							drawChartLine(rowData["activeunits"], rowData["completedunits"], rowData["pendingunits"], rowData["elapsed"]);
-						}
-					);
-				}
-			},
-			{ "data": "email" },
-			{ "data": "projectid" },
-			{ "data": "reservationid" },
-			{ "data": "slots" },
-			{ "data": "state" },
-		]
-	});
-	$("#modal-close").click(function () {
-		$(".modal").removeClass("is-active");
-	});
-	$("#modal-close1").click(function () {
-		$(".modal").removeClass("is-active");
-	});
-}
+
 
 var isLive = false;
 var interval;
@@ -80,55 +50,10 @@ $("#d1h").click(function () {
 	}
 });
 
-function sum(arr, key) {
-	var total = 0;
-	for (var i = 0; i < arr.length; i++) {
-		row = arr[i];
-		total += row[key];
-	}
-	return total;
-}
 
-function groupBy(xs, key) {
-	return xs.reduce(function (rv, x) {
-		(rv[x[key]] = rv[x[key]] || []).push(x);
-		return rv;
-	}, {});
-}
 
-function reservationUsage(jsonData) {
-	// initialization
-	// create a json obj to store slots?
-	var arr = [];
-	arr.push(['Location', 'Parent', 'Market trade volume (size)', 'Market increase/decrease (color)']);
-	arr.push(["all", null, 0, 0]);
 
-	console.log(jsonData);
-
-	// group by reservation id
-	var groupbyReservationId = groupBy(jsonData["data"], "reservationid");
-	console.log(groupbyReservationId);
-	for (var reservationId in groupbyReservationId) {
-		var slotsbyReservation = sum(groupbyReservationId[reservationId], "slots")
-		arr.push([reservationId, "all", slotsbyReservation, 0]);
-
-		var slotsbyProject = slotsbyReservation / groupbyReservationId[reservationId].length;
-		var groupbyProject = groupBy(groupbyReservationId[reservationId], 'projectid');
-		for (var projectId in groupbyProject) {
-			arr.push([projectId, reservationId, slotsbyProject, 0]);
-
-			var slotsbyUser = slotsbyProject / groupbyProject[projectId].length;
-			var groupbyUser = groupBy(groupbyProject[projectId], 'email');
-			for (var email in groupbyUser) {
-				arr.push([email, projectId, slotsbyUser, 0]);
-			}
-		}
-		console.log(arr);
-	}
-	return arr;
-}
-
-function drawChart(jsonData) {
+function drawReservationChart(jsonData) {
 	var data = google.visualization.arrayToDataTable(reservationUsage(jsonData));
 	tree = new google.visualization.TreeMap(document.getElementById('chart_div'));
 	tree.draw(data, {
@@ -162,6 +87,89 @@ function drawChart(jsonData) {
 	*/
 		}
 
+	});
+}
+
+// reservation usage section
+function reservationUsage(jsonData) {
+	// initialization
+	var arr = [];
+	arr.push(['Location', 'Parent', 'Market trade volume (size)', 'Market increase/decrease (color)']);
+	arr.push(["all", null, 0, 0]);
+
+	console.log(jsonData);
+
+	// group by reservation id
+	var groupbyReservationId = groupBy(jsonData["data"], "reservationid");
+	console.log(groupbyReservationId);
+	for (var reservationId in groupbyReservationId) {
+		var slotsbyReservation = sum(groupbyReservationId[reservationId], "slots")
+		arr.push([reservationId, "all", slotsbyReservation, 0]);
+
+		var slotsbyProject = slotsbyReservation / groupbyReservationId[reservationId].length;
+		var groupbyProject = groupBy(groupbyReservationId[reservationId], 'projectid');
+		for (var projectId in groupbyProject) {
+			arr.push([projectId, reservationId, slotsbyProject, 0]);
+
+			var slotsbyUser = slotsbyProject / groupbyProject[projectId].length;
+			var groupbyUser = groupBy(groupbyProject[projectId], 'email');
+			for (var email in groupbyUser) {
+				arr.push([email, projectId, slotsbyUser, 0]);
+			}
+		}
+		console.log(arr);
+	}
+	return arr;
+}
+
+//helper function for reservationUsage
+function sum(arr, key) {
+	var total = 0;
+	for (var i = 0; i < arr.length; i++) {
+		row = arr[i];
+		total += row[key];
+	}
+	return total;
+}
+
+//helper function for reservationUsage
+function groupBy(xs, key) {
+	return xs.reduce(function (rv, x) {
+		(rv[x[key]] = rv[x[key]] || []).push(x);
+		return rv;
+	}, {});
+}
+
+// job list section
+function jobList(data) {
+	$('#job-table').DataTable({
+		// TODO: get data from variable
+		"data": data["data"],
+		"columns": [
+			{
+				"data": "jobid",
+				'createdCell': function (td, cellData, rowData, row, col) {
+					$(td).html('<a>' + cellData + '</a>');
+					$(td).click(
+						function () {
+							$(".modal").addClass("is-active");
+							drawChartLine(rowData["activeunits"], rowData["completedunits"], rowData["pendingunits"], rowData["elapsed"]);
+						}
+					);
+				}
+			},
+			{ "data": "email" },
+			{ "data": "projectid" },
+			{ "data": "reservationid" },
+			{ "data": "slots" },
+			{ "data": "state" },
+		]
+	});
+	$("#modal-close").click(function () {
+		$(".modal").removeClass("is-active");
+	});
+	$("#modal-close1").click(function () {
+		$(".modal").removeClass("is-active");
 	});
 }
 
