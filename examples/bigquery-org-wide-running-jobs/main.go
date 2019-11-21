@@ -98,6 +98,9 @@ type PushRequest struct {
 
 type JobJson struct {
 	ProtoPayload struct {
+		AuthenticationInfo struct {
+			UserEmail string	 `json:"principalEmail"`
+		} `json:"authenticationInfo"`
 		ServiceData struct {
 			JobInsertResponse struct {
 				Resource struct {
@@ -141,6 +144,7 @@ func (j JobJson) GetJobStatistics() JobStatistics {
 
 type Job struct {
 	Name   JobName
+	UserEmail  string
 	Stats  JobStatistics
 	Detail JobDetail
 }
@@ -207,6 +211,7 @@ func StateString(s bigquery.State) string {
 
 
 type JobDisplay struct {
+	UserEmail      string    `json:"useremail"`
 	CreateTime     time.Time `json:"createtime,datetime"`
 	StartTime      time.Time `json:"starttime,datetime"`
 	EndTime		   time.Time `json:"endtime,datetime"`
@@ -252,7 +257,9 @@ func GetJobDisplayFields() []DisplayField {
 
 func (j *Job) GetDetail(bqj *bigquery.Job, bqc *bigquery.Client, ctx context.Context) error {
 	status := bqj.LastStatus()
+	log.Debugf(ctx, "bgj.Email(): %v", bqj.Email())
 	detail := JobDetail{
+		//--------------------------------------------------
 		Email:   bqj.Email(),
 		State:   StateString(status.State),
 		Updated: time.Now(),
@@ -493,6 +500,7 @@ func startEndTimeJobsHandler(w http.ResponseWriter, r *http.Request) {
 	elapsed := make([]int64, 0)
 	for i, j := range jobs {
 		jobsDisplay[i] = &JobDisplay{
+			j.UserEmail,
 			j.Stats.CreateTime,
 			j.Stats.StartTime,
 			j.Stats.EndTime,
@@ -561,6 +569,7 @@ func jobIdHandler(w http.ResponseWriter, r *http.Request) {
 	elapsed := make([]int64, 0)
 	for i, j := range jobs {
 		jobsDisplay[i] = &JobDisplay{
+			j.UserEmail,
 			j.Stats.CreateTime,
 			j.Stats.StartTime,
 			j.Stats.EndTime,
@@ -631,6 +640,7 @@ func jobsHandler(w http.ResponseWriter, r *http.Request) {
 	elapsed := make([]int64, 0)
 	for i, j := range jobs {
 		jobsDisplay[i] = &JobDisplay{
+			j.UserEmail,
 			j.Stats.CreateTime,
 			j.Stats.StartTime,
 			j.Stats.EndTime,
@@ -952,6 +962,7 @@ func pushHandler(w http.ResponseWriter, r *http.Request) {
 	job := Job{
 		Name:  jobJson.GetJobName(),
 		Stats: jobJson.GetJobStatistics(),
+		UserEmail: jobJson.ProtoPayload.AuthenticationInfo.UserEmail,
 	}
 	if strings.HasPrefix(job.Name.ProjectId, "google.com") {
 		log.Debugf(ctx, "Msg from google.com project, ignoring")

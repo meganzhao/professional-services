@@ -112,7 +112,7 @@ function reservationUsage(jsonData) {
 			arr.push([projectId, reservationId, slotsbyProject, 0]);
 
 			var slotsbyUser = slotsbyProject / groupbyProject[projectId].length;
-			var groupbyUser = groupBy(groupbyProject[projectId], 'email');
+			var groupbyUser = groupBy(groupbyProject[projectId], 'useremail');
 			for (var email in groupbyUser) {
 				arr.push([email, projectId, slotsbyUser, 0]);
 			}
@@ -158,7 +158,7 @@ function jobList(data) {
 					);
 				}
 			},
-			{ "data": "email" },
+			{ "data": "useremail" },
 			{ "data": "projectid" },
 			{ "data": "reservationid" },
 			{ "data": "slots" },
