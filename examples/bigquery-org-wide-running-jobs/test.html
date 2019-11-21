@@ -134,8 +134,8 @@ function reservationUsage() {
 			var slotsbyUser = slotsbyProject / groupbyProject[projectId].length;
 			var groupbyUser = groupBy(groupbyProject[projectId], 'email');
 			for (var email in groupbyUser){
-				var newRow = [email, projectId, slotsbyUser, 0];
-				arr.push(newRow);
+				arr.push([projectId + "/" + email, projectId, slotsbyUser, 0]);
+
 			}
 		}
 	}

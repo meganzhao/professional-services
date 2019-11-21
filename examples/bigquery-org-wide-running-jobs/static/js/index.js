@@ -114,7 +114,7 @@ function reservationUsage(jsonData) {
 			var slotsbyUser = slotsbyProject / groupbyProject[projectId].length;
 			var groupbyUser = groupBy(groupbyProject[projectId], 'useremail');
 			for (var email in groupbyUser) {
-				arr.push([email, projectId, slotsbyUser, 0]);
+				arr.push([projectId + "/" + email, projectId, slotsbyUser, 0]);
 			}
 		}
 		console.log(arr);
