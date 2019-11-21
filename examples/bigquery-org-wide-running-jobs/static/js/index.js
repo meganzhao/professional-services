@@ -153,7 +153,7 @@ function jobList(data) {
 					$(td).click(
 						function () {
 							$(".modal").addClass("is-active");
-							drawChartLine(rowData["activeunits"], rowData["completedunits"], rowData["pendingunits"], rowData["elapsed"]);
+							drawChartLine(rowData);
 						}
 					);
 				}
@@ -173,8 +173,15 @@ function jobList(data) {
 	});
 }
 
-function drawChartLine(activeunits, completedunits, pendingunits, elapsed) {
-	// TODO: cut all arrays to last 25
+function drawChartLine(rowData) {
+	var activeunits = rowData["activeunits"]
+  	  , completedunits = rowData["completedunits"]
+      , pendingunits = rowData["pendingunits"]
+	  , elapsed = rowData["elapsed"]
+	  , jobId = rowData["jobid"]
+	  , projectId = rowData["projectid"]
+	  , query = rowData["query"];
+
 
 	var dataArray = [['elapsed', 'activeunits', 'completedunits', 'pendingunits']];
 
@@ -190,13 +197,10 @@ function drawChartLine(activeunits, completedunits, pendingunits, elapsed) {
 
 	var data = new google.visualization.arrayToDataTable(dataArray);
 
-	// var data = google.visualization.arrayToDataTable([
-	// 	['Time', 'Pending Units', 'Total Units', 'Total Slots'],
-	// 	['10:01:01',  4000,      4000, 100],
-	// 	['10:01:02',  3900,      4000, 120],
-	// 	]);
-
 	var options = {
+		title: "JobId: " + jobId + "\n" + 
+				"ProjectId: " + projectId + "\n" +  
+				"Query: " + query + "\n",
 		pointSize: 2,
 		curveType: 'function',
 		legend: 'top',
