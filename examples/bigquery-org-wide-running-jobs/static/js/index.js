@@ -179,32 +179,24 @@ function drawChartLine(rowData) {
 	var activeunits = rowData["activeunits"]
   	  , completedunits = rowData["completedunits"]
 	  , pendingunits = rowData["pendingunits"]
-	  // nanoseconds to seconds
 	  , elapsed = rowData["elapsed"]
+	  , starttime = new Date(rowData["starttime"])
 	  , jobId = rowData["jobid"]
 	  , projectId = rowData["projectid"]
 	  , query = rowData["query"];
 
-	console.log("timeline");
-	console.log(elapsed);
-
-	// calculate a timeline of average slot usage
 	const length = rowData["activeunits"].length
 	var slots = new Array(length);
-	for (i = 0; i < length; i++) {
-		rowData["elapsed"][i] = rowData["elapsed"][i] / 1000000000;
-		slots[i] = rowData["slotmillis"][i] / rowData["elapsed"][i] / 1000;
-	}
-	console.log(slots);
+	// number of milliseconds since 1 January 1970 00:00:00
+	starttime = starttime.getTime();
 
-	// var dataArray = [['elapsed', 'activeunits', 'completedunits', 'pendingunits']];
-	// if (activeunits === undefined || completedunits === undefined ||
-	// 	pendingunits === undefined || elapsed === undefined) {
-	// 	return;
-	// }
-	// for (var n = 0; n < activeunits.length; n++) {
-	// 	dataArray.push([elapsed[n], activeunits[n], completedunits[n], pendingunits[n]]);
-	// }
+	for (i = 0; i < length; i++) {
+		// calculate a timeline of average slot usage
+		slots[i] = rowData["slotmillis"][i] * 1000000 / rowData["elapsed"][i];
+		// 1 milliseconds = 1000000 Nanoseconds 
+		rowData["elapsed"][i] = new Date(starttime + rowData["elapsed"][i] / 1000000)
+	}
+	console.log(rowData["elapsed"]);
 
 	var dataArray = [['elapsed', 'activeunits', 'pendingunits', 'completedunits', 'slots']];
 
@@ -236,7 +228,8 @@ function drawChartLine(rowData) {
 			2: { targetAxisIndex: 2 }
 		},
 		hAxis: {
-			title: 'Timeline',
+			title: 'Timeline (UTC-6)',
+			format: 'M/d/yy hh:mm:ss',
 			slantedText: true,
 			gridlines: {
 				count: 11

@@ -634,7 +634,8 @@ func jobIdHandler(w http.ResponseWriter, r *http.Request) {
 func jobsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	jobs := make([]*Job, 0)
-	query := datastore.NewQuery("Job").Filter("Detail.State =", "Running")
+	//query := datastore.NewQuery("Job").Filter("Detail.State =", "Running")
+	query := datastore.NewQuery("Job")
 	_, err := query.GetAll(ctx, &jobs)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error getting jobs: %v", err), http.StatusBadRequest)
