@@ -1,20 +1,30 @@
 $(document).ready(function () {
-	$.ajax({ 
-		type: 'GET', 
-		url: 'https://festive-terrain-1.appspot.com/_ah/get-handlers/v1/jobs', 
-		data: { get_param: 'value' }, 
+	$.ajax({
+		type: 'GET',
+		url: 'https://festive-terrain-1.appspot.com/_ah/get-handlers/v1/jobs',
+		data: { get_param: 'value' },
 		dataType: 'json',
-		success: function (data) { 
-			 // Load the Visualization API and the package and
-			 // set a callback to run when the Google Visualization API is loaded.
+		success: function (data) {
 			data = data["data"];
 			// calculat slot usage
+			for (i in data) {
+				rowData = data[i]
+				const length = rowData["activeunits"].length
+				rowData["slotUsage"] = new Array(length);
+
+				for (j = 0; j < length; j++) {
+					rowData["slotUsage"][j] = rowData["slotmillis"][j] * 1000000 / rowData["elapsed"][j];
+				}
+			}
+			// Load the Visualization API and the package and
+			// set a callback to run when the Google Visualization API is loaded.
 			google.charts.load('current', {
-				'callback': function() {
+				'callback': function () {
 					drawReservationChart(data);
 					jobList(data);
 				},
-				'packages': ['treemap', 'corechart'] });
+				'packages': ['treemap', 'corechart']
+			});
 		}
 	});
 });
@@ -88,7 +98,6 @@ function drawReservationChart(jsonData) {
 	': ' + value );
 	*/
 		}
-
 	});
 }
 
@@ -96,40 +105,47 @@ function drawReservationChart(jsonData) {
 function reservationUsage(jsonData) {
 	// initialization
 	var arr = [];
-	arr.push(['Location', 'Parent', 'Market trade volume (size)', 'Market increase/decrease (color)']);
+	arr.push(['Level', 'Parent', 'Reserved slot (size)', 'Slot usage (color)']);
 	arr.push(["all", null, 0, 0]);
-
-	console.log(jsonData);
 
 	// group by reservation id
 	var groupbyReservationId = groupBy(jsonData, "reservationid");
-	console.log(groupbyReservationId);
 	for (var reservationId in groupbyReservationId) {
-		var slotsbyReservation = sum(groupbyReservationId[reservationId], "slots")
-		arr.push([reservationId, "all", slotsbyReservation, 0]);
+		var slotsbyReservation = sum(groupbyReservationId[reservationId], "slots");
+		arr.push([reservationId, "all", 0, 0]);
 
 		var slotsbyProject = slotsbyReservation / groupbyReservationId[reservationId].length;
 		var groupbyProject = groupBy(groupbyReservationId[reservationId], 'projectid');
 		for (var projectId in groupbyProject) {
-			arr.push([projectId, reservationId, slotsbyProject, 0]);
+			arr.push([projectId, reservationId, 0, 0]);
 
 			var slotsbyUser = slotsbyProject / groupbyProject[projectId].length;
 			var groupbyUser = groupBy(groupbyProject[projectId], 'useremail');
+			
 			for (var email in groupbyUser) {
-				arr.push([projectId + "/" + email, projectId, slotsbyUser, 0]);
+				var slotUsagebyUser = sum(groupbyUser[email], "slotUsage");
+				arr.push([projectId + "/" + email, projectId, slotsbyUser, slotUsagebyUser / slotsbyUser]);
 			}
 		}
-		console.log(arr);
 	}
+	console.log(arr);
 	return arr;
 }
 
 //helper function for reservationUsage
 function sum(arr, key) {
 	var total = 0;
-	for (var i = 0; i < arr.length; i++) {
-		row = arr[i];
-		total += row[key];
+	if (key == "slotUsage") {
+		for (var i = 0; i < arr.length; i++) {
+			row = arr[i];
+			// add the last slot average usage to total
+			total += row[key][row[key].length - 1];
+		}
+	} else {
+		for (var i = 0; i < arr.length; i++) {
+			row = arr[i];
+			total += row[key];
+		}
 	}
 	return total;
 }
@@ -177,45 +193,43 @@ function jobList(data) {
 
 function drawChartLine(rowData) {
 	var activeunits = rowData["activeunits"]
-  	  , completedunits = rowData["completedunits"]
-	  , pendingunits = rowData["pendingunits"]
-	  , elapsed = rowData["elapsed"]
-	  , starttime = new Date(rowData["starttime"])
-	  , jobId = rowData["jobid"]
-	  , projectId = rowData["projectid"]
-	  , query = rowData["query"];
+		, completedunits = rowData["completedunits"]
+		, pendingunits = rowData["pendingunits"]
+		, slotUsage = rowData["slotUsage"]
+		, elapsed = rowData["elapsed"]
+		, starttime = new Date(rowData["starttime"])
+		, jobId = rowData["jobid"]
+		, projectId = rowData["projectid"]
+		, query = rowData["query"];
+
 
 	const length = rowData["activeunits"].length
-	var slots = new Array(length);
 	// number of milliseconds since 1 January 1970 00:00:00
 	starttime = starttime.getTime();
 
 	for (i = 0; i < length; i++) {
-		// calculate a timeline of average slot usage
-		slots[i] = rowData["slotmillis"][i] * 1000000 / rowData["elapsed"][i];
 		// 1 milliseconds = 1000000 Nanoseconds 
 		rowData["elapsed"][i] = new Date(starttime + rowData["elapsed"][i] / 1000000)
 	}
-	console.log(rowData["elapsed"]);
 
-	var dataArray = [['elapsed', 'activeunits', 'pendingunits', 'completedunits', 'slots']];
+	var dataArray = [['elapsed', 'activeunits', 'pendingunits', 'completedunits', 'slotUsage']];
 
-	if (activeunits === undefined || slots === undefined ||
+	if (activeunits === undefined || slotUsage === undefined ||
 		pendingunits === undefined || completedunits === undefined ||
 		elapsed === undefined) {
 		return;
 	}
 
 	for (var n = 0; n < activeunits.length; n++) {
-		dataArray.push([elapsed[n], activeunits[n], pendingunits[n], completedunits[n], slots[n]]);
+		dataArray.push([elapsed[n], activeunits[n], pendingunits[n], completedunits[n], slotUsage[n]]);
 	}
 
 	var data = new google.visualization.arrayToDataTable(dataArray);
 
 	var options = {
-		title: "JobId: " + jobId + "\n" + 
-				"ProjectId: " + projectId + "\n" +  
-				"Query: " + query + "\n",
+		title: "JobId: " + jobId + "\n" +
+			"ProjectId: " + projectId + "\n" +
+			"Query: " + query + "\n",
 		pointSize: 2,
 		curveType: 'function',
 		legend: 'top',
