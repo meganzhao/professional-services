@@ -7,17 +7,18 @@ handlers:
 - url: /
   static_files: template/index.html
   upload: template/index.html
+  
 
 - url: /_ah/push-handlers/.*
   login: admin
   script: auto
 
 - url: /_ah/get-handlers/.*
-  login: admin
+  # login: admin
   script: auto
 
 - url: /.*
-  login: admin
+  # login: admin
   script: auto
 
 

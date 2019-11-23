@@ -7,6 +7,8 @@ $(document).ready(function () {
 		success: function (data) { 
 			 // Load the Visualization API and the package and
 			 // set a callback to run when the Google Visualization API is loaded.
+			data = data["data"];
+			// calculat slot usage
 			google.charts.load('current', {
 				'callback': function() {
 					drawReservationChart(data);
@@ -100,7 +102,7 @@ function reservationUsage(jsonData) {
 	console.log(jsonData);
 
 	// group by reservation id
-	var groupbyReservationId = groupBy(jsonData["data"], "reservationid");
+	var groupbyReservationId = groupBy(jsonData, "reservationid");
 	console.log(groupbyReservationId);
 	for (var reservationId in groupbyReservationId) {
 		var slotsbyReservation = sum(groupbyReservationId[reservationId], "slots")
@@ -144,7 +146,7 @@ function groupBy(xs, key) {
 function jobList(data) {
 	$('#job-table').DataTable({
 		// TODO: get data from variable
-		"data": data["data"],
+		"data": data,
 		"columns": [
 			{
 				"data": "jobid",
@@ -176,24 +178,45 @@ function jobList(data) {
 function drawChartLine(rowData) {
 	var activeunits = rowData["activeunits"]
   	  , completedunits = rowData["completedunits"]
-      , pendingunits = rowData["pendingunits"]
+	  , pendingunits = rowData["pendingunits"]
+	  // nanoseconds to seconds
 	  , elapsed = rowData["elapsed"]
 	  , jobId = rowData["jobid"]
 	  , projectId = rowData["projectid"]
 	  , query = rowData["query"];
 
+	console.log("timeline");
+	console.log(elapsed);
 
-	var dataArray = [['elapsed', 'activeunits', 'completedunits', 'pendingunits']];
+	// calculate a timeline of average slot usage
+	const length = rowData["activeunits"].length
+	var slots = new Array(length);
+	for (i = 0; i < length; i++) {
+		rowData["elapsed"][i] = rowData["elapsed"][i] / 1000000000;
+		slots[i] = rowData["slotmillis"][i] / rowData["elapsed"][i] / 1000;
+	}
+	console.log(slots);
 
-	if (activeunits === undefined || completedunits === undefined ||
-		pendingunits === undefined || elapsed === undefined) {
+	// var dataArray = [['elapsed', 'activeunits', 'completedunits', 'pendingunits']];
+	// if (activeunits === undefined || completedunits === undefined ||
+	// 	pendingunits === undefined || elapsed === undefined) {
+	// 	return;
+	// }
+	// for (var n = 0; n < activeunits.length; n++) {
+	// 	dataArray.push([elapsed[n], activeunits[n], completedunits[n], pendingunits[n]]);
+	// }
+
+	var dataArray = [['elapsed', 'activeunits', 'pendingunits', 'completedunits', 'slots']];
+
+	if (activeunits === undefined || slots === undefined ||
+		pendingunits === undefined || completedunits === undefined ||
+		elapsed === undefined) {
 		return;
 	}
 
 	for (var n = 0; n < activeunits.length; n++) {
-		dataArray.push([elapsed[n], activeunits[n], completedunits[n], pendingunits[n]]);
+		dataArray.push([elapsed[n], activeunits[n], pendingunits[n], completedunits[n], slots[n]]);
 	}
-	console.log(dataArray);
 
 	var data = new google.visualization.arrayToDataTable(dataArray);
 
