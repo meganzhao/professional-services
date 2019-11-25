@@ -111,24 +111,44 @@ function reservationUsage(jsonData) {
 	// group by reservation id
 	var groupbyReservationId = groupBy(jsonData, "reservationid");
 	for (var reservationId in groupbyReservationId) {
-		var slotsbyReservation = sum(groupbyReservationId[reservationId], "slots");
-		arr.push([reservationId, "all", 0, 0]);
+		// var slotsbyReservation = sum(groupbyReservationId[reservationId], "slots");
+		var slotsbyReservation = findSlot(jsonData, reservationId);
+		var slotUsagebyReservation = 0;
 
-		var slotsbyProject = slotsbyReservation / groupbyReservationId[reservationId].length;
 		var groupbyProject = groupBy(groupbyReservationId[reservationId], 'projectid');
-		for (var projectId in groupbyProject) {
-			arr.push([projectId, reservationId, 0, 0]);
+		var slotsbyProject = slotsbyReservation / Object.keys(groupbyProject).length;
 
-			var slotsbyUser = slotsbyProject / groupbyProject[projectId].length;
+		for (var projectId in groupbyProject) {
 			var groupbyUser = groupBy(groupbyProject[projectId], 'useremail');
-			
+			var slotsbyUser = slotsbyProject / Object.keys(groupbyUser).length;
+			var slotUsagebyProject = 0;
+
 			for (var email in groupbyUser) {
 				var slotUsagebyUser = sum(groupbyUser[email], "slotUsage");
-				arr.push([projectId + "/" + email, projectId, slotsbyUser, slotUsagebyUser / slotsbyUser]);
-			}
+				slotUsagebyProject += slotUsagebyUser;
+				slotUsagebyUser /= slotsbyUser;
+				arr.push([{v: projectId + "/" + email, f: email + 
+					" (Reserved slots: " + slotsbyUser.toFixed(2) + "; slotUsage: " + 
+					slotUsagebyUser.toFixed(2) + "%; number of jobs: " + 
+					groupbyUser[email].length + ")"}, 
+					projectId, slotsbyUser, slotUsagebyUser]);
+			}			
+			
+			arr.push([{v: projectId, f: projectId + 
+				" (Reserved slots: " + slotsbyProject.toFixed(2) + "; slotUsage: " + 
+				(slotUsagebyProject / slotsbyProject).toFixed(2) + "%; number of users: " + 
+				Object.keys(groupbyUser).length + ")"}, 
+				reservationId, 0, 0]);
+
+			slotUsagebyReservation += slotUsagebyProject;
 		}
+
+		arr.push([{v: reservationId, f: reservationId + 
+			" (Reserved slots: " + slotsbyReservation.toFixed(2) + "; slotUsage: " + 
+			(slotUsagebyReservation / slotsbyReservation).toFixed(2) + "%; number of projects: " + 
+			Object.keys(groupbyProject).length + ")"}, 
+			"all", 0, 0]);
 	}
-	console.log(arr);
 	return arr;
 }
 
@@ -137,6 +157,7 @@ function sum(arr, key) {
 	var total = 0;
 	if (key == "slotUsage") {
 		for (var i = 0; i < arr.length; i++) {
+			console.log(arr);
 			row = arr[i];
 			// add the last slot average usage to total
 			total += row[key][row[key].length - 1];
@@ -156,6 +177,15 @@ function groupBy(xs, key) {
 		(rv[x[key]] = rv[x[key]] || []).push(x);
 		return rv;
 	}, {});
+}
+
+function findSlot(data, reservationId) {
+	for (var i = 0; i < data.length; i++) {
+		row = data[i];
+		if (row["reservationid"] == reservationId) {
+			return row["slots"];
+		}
+	}
 }
 
 // job list section
