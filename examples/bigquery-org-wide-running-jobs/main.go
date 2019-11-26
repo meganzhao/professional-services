@@ -53,7 +53,7 @@ func BqJobKey(j *bigquery.Job, p string) string {
 type Reservation struct {
 	Reservation_ID string
 	Project_ID string
-	Reservation_Slot int64
+	Reservation_Slot float64
 }
 
 type JobDetail struct {
@@ -70,7 +70,7 @@ type JobDetail struct {
 	//SlotMillis    []int64
 	Updated       time.Time
 	ReservationID string
-	Slots 		  int64
+	Slots 		  float64
 }
 
 type TimelineSample struct {
@@ -235,7 +235,7 @@ type JobDisplay struct {
 	//SlotMillis     []int64     `json:"slotmillis,number"`
 	Updated        time.Time    `json:"updated,datetime"`
 	ReservationID  string 	 `json:"reservationid"`
-	Slots          int64	 `json:"slots,number"`
+	Slots          float64	 `json:"slots,number"`
 }
 
 type DisplayField struct {
@@ -271,7 +271,6 @@ func (j *Job) GetDetail(bqj *bigquery.Job, bqc *bigquery.Client, ctx context.Con
 	
 	// Potential to improve performance by only query when insert job (not update job)
 
-	// CHECK retrieve via key faster or retrieve via filter by project ID?
 	key := datastore.NewKey(ctx, "Reservation", j.Name.ProjectId, 0, nil)
 	reservation := new(Reservation)
 	log.Debugf(ctx, "reservation debug, datastore key: %v", key)
@@ -634,8 +633,8 @@ func jobIdHandler(w http.ResponseWriter, r *http.Request) {
 func jobsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	jobs := make([]*Job, 0)
-	//query := datastore.NewQuery("Job").Filter("Detail.State =", "Running")
-	query := datastore.NewQuery("Job")
+	query := datastore.NewQuery("Job").Filter("Detail.State =", "Running")
+	// query := datastore.NewQuery("Job")
 	_, err := query.GetAll(ctx, &jobs)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error getting jobs: %v", err), http.StatusBadRequest)
@@ -853,95 +852,41 @@ func printDatastoreJobs(ctx context.Context, w http.ResponseWriter) error {
 // copy BQ reservation tables to Datastore
 func updateReservationHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
-	// TODO: replace projectID
-
 	// CHECK: project ID from config; 
 	// the project the reservation tables live
 	client, err := getBqClient(ctx, appengine.AppID(ctx))
 	if err != nil {
 		// TODO: Handle error.
 	}
-
-	queryReservation := client.Query(`SELECT reservation_id, project_id 
-		FROM` + "`festive-terrain-1.slot_reservation.reservation_project`")
+	queryReservation := client.Query(`SELECT reservation_id, project_id, reservation_slot
+		FROM` + "`festive-terrain-1.slot_reservation.reservation_table`")
 	itReservation, err := queryReservation.Read(ctx)
 	if err != nil {
 		// TODO: Handle error.
 	}
 
-	// to improve performance, move the structs to global?
-	type ReservationProject struct {
-		Reservation_ID string
-		Project_ID string
-	}
-
-	type ReservationSlot struct {
-		Reservation_ID string
-		Reservation_Slot int64
-	}	
-
-	// type Reservation struct {
-	// 	Reservation_ID string
-	// 	Project_ID string
-	// 	Reservation_Slot float64
-	// }
-
 	for {
-		var reservation_project ReservationProject
-		err :=itReservation.Next(&reservation_project)
+		var reservation_obj Reservation
+		err :=itReservation.Next(&reservation_obj)
 		if err == iterator.Done {
 			break
 		}
 		if err != nil {
 			// TODO: Handle error.
+		}	
+
+		reservation := &Reservation{
+			Reservation_ID: reservation_obj.Reservation_ID,
+			Project_ID: reservation_obj.Project_ID,
+			Reservation_Slot:  reservation_obj.Reservation_Slot,
 		}
 
-		// within each row, query slot from another table and add to Datastore
-		querySlot := client.Query(`SELECT reservation_id, reservation_slot 
-		FROM` + "`festive-terrain-1.slot_reservation.reservation_slot`" + 
-		`WHERE reservation_id = @reservation_id`)
-
-		querySlot.Parameters = []bigquery.QueryParameter{
-			{
-				Name: "reservation_id",
-				Value: reservation_project.Reservation_ID,
-			},
+		// Insert into Datastore
+		k := datastore.NewKey(ctx, "Reservation", reservation_obj.Project_ID, 0, nil)
+		if _, err := datastore.Put(ctx, k, reservation); err != nil {
+			log.Errorf(ctx, "Couldn't insert into Datastore: %v\n", err)
+			w.Write([]byte("error"))
 		}
-
-		w.Write([]byte(reservation_project.Project_ID))
-
-		itSlot, err := querySlot.Read(ctx)
-		if err != nil {
-			// TODO: Handle error.
-		}	
-		for {
-			w.Write([]byte("\n"))
-			var reservation_slot ReservationSlot
-			err :=itSlot.Next(&reservation_slot)
-			if err == iterator.Done {
-				break
-			}
-			if err != nil {
-				// TODO: Handle error.
-				w.Write([]byte("error"))
-			}		
-
-			reservation := &Reservation{
-				Reservation_ID: reservation_slot.Reservation_ID,
-				Project_ID: reservation_project.Project_ID,
-				Reservation_Slot:  reservation_slot.Reservation_Slot,
-			}
-
-			// Insert into Datastore
-			// How about update?
-			k := datastore.NewKey(ctx, "Reservation", reservation_project.Project_ID, 0, nil)
-			if _, err := datastore.Put(ctx, k, reservation); err != nil {
-				log.Errorf(ctx, "Couldn't insert into Datastore: %v\n", err)
-				w.Write([]byte("error"))
-			}
-
-		}	
-		
 	}
 }
 
