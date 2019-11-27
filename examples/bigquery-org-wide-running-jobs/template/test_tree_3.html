@@ -151,7 +151,7 @@
 					<span class="column">
 					<div class="row tile is-parent">
 						<div class="tile  is-child">
-							<span class="tag is-medium has-background-info has-text-white">projectId:thd-edw-pr
+							<span id="search1" class="is-hidden tag is-medium has-background-info has-text-white">projectId:thd-edw-pr
 								<button class="delete is-small"></button>
 							</span>
 							<span class="tag is-medium has-background-info has-text-white">reservationid:/pac/thd/
@@ -239,9 +239,7 @@
 		$( "#modal-close" ).click(function() {
 			$(".modal").removeClass("is-active");
 		});
-		$( "#modal-close1" ).click(function() {
-			$(".modal").removeClass("is-active");
-		});
+		
 		var isLive = false;
 		var interval;
 		var d1h = false;
@@ -284,29 +282,29 @@
 				['pac/thd/io',    	'pac/thd/',             0,                               0],
 				['pac/thd/npr',     'pac/thd/',      0,                               0],
 				['pac/thd/sc', 		'pac/thd/',             0,                               0],
-				['pac/thd/st',    	'pac/thd/',             0,                               0],
-				['pac/thd/us',   	'pac/thd/pr',           11,                              10],
-				['pac/thd/cn',      'pac/thd/pr',           52,                              31],
-				['pac/thd/eu',    	'pac/thd/pr',           24,                              12],
-				['pac/thd/pr/sc',   'pac/thd/pr',           16,                             -23],
-				['pac/thd/eu/adhoc','pac/thd/eu',             42,                              -11],
-				['pac/thd/eu/sla',  'pac/thd/eu',             31,                              -2],
-				['pac/thd/eu/nosla','pac/thd/eu',             22,                              -13],
-				['pac/thd/eu/dev',  'pac/thd/eu',             17,                              4],
-				['pac/thd/eu/test', 'pac/thd/eu',             21,                              -5],
-				['pac/thd/npr/sla', 'pac/thd/npr',               36,                              4],
-				['pac/thd/npr/nosla','pac/thd/npr',               20,                              -12],
-				['pac/thd/npr/prod','pac/thd/npr',               40,                              63],
-				['pac/thd/npr/dev', 'pac/thd/npr',               4,                               34],
-				['pac/thd/npr/test','pac/thd/npr',               1,                               -5],
-				['pac/thd/npr/uat', 'pac/thd/npr',               12,                              24],
-				['pac/thd/npr/io1', 'pac/thd/npr',               18,                              13],
-				['Pakistan',  		'pac/thd/npr',               11,                              -52],
-				['pac/thd/sc/npa',  'pac/thd/sc',             21,                              0],
-				['pac/thd/sla', 	'pac/thd/sc',             30,                              43],
-				['pac/thd/nosla',   'pac/thd/sc',             12,                              2],
-				['pac/thd/dev',     'pac/thd/sc',             10,                              12],
-				['pac/thd/test',    'pac/thd/sc',             8,                               10]
+				['pac/thd/eu',    	'pac/thd/',             0,                               0],
+				['pr-test',   	'pac/thd/pr',           11,                              10],
+				['pr-dev',      'pac/thd/pr',           52,                              31],
+				['pr-sla',    	'pac/thd/pr',           24,                              12],
+				['pr-adhoc',   'pac/thd/pr',           16,                             -23],
+				['eu-dev','pac/thd/eu',             42,                              -11],
+				['eu-test',  'pac/thd/eu',             31,                              -2],
+				['eu-nosla','pac/thd/eu',             22,                              -13],
+				['eu-sla',  'pac/thd/eu',             17,                              4],
+				['eu-adhoc', 'pac/thd/eu',             21,                              -5],
+				['npr-test', 'pac/thd/npr',               36,                              4],
+				['npr-dev','pac/thd/npr',               20,                              -12],
+				['np-sla','pac/thd/npr',               40,                              63],
+				['npr-nosla', 'pac/thd/npr',               4,                               34],
+				['npr-adhoc','pac/thd/npr',               1,                               -5],
+				['npr-sc-sla', 'pac/thd/npr',               12,                              24],
+				['npr-sc-adhoc', 'pac/thd/npr',               18,                              13],
+				['npr-io1-sla',  		'pac/thd/npr',               11,                              -52],
+				['sc-dev',  'pac/thd/sc',             21,                              0],
+				['sc-test', 	'pac/thd/sc',             30,                              43],
+				['sc-sla',   'pac/thd/sc',             12,                              2],
+				['sc-nosla',     'pac/thd/sc',             10,                              12],
+				['sc-adhoc',    'pac/thd/sc',             8,                               10]
 				]);
 
 			
@@ -326,6 +324,7 @@
 				var value = 20;
 			    if (selectedItem) {
 			      var row = selectedItem.row;
+			      $("#search1").removeClass("is-hidden");
 			      //alert('The user selected ' + value);
 			      /*
 			      alert(
@@ -346,36 +345,36 @@
 		}
 
 		google.charts.load('current', {'packages':['corechart']});
-      	google.charts.setOnLoadCallback(drawChartLine);
+      	//google.charts.setOnLoadCallback(drawChartLine);
 
       	function drawChartLine() {
         	var data = google.visualization.arrayToDataTable([
-	          	['Time', 'Pending Units', 'Total Units', 'Total Slots'],
+	          	['Time', 'Pending Units', 'Total Units', 'Slots utilized'],
 	          	['10:01:01',  4000,      4000, 100],
 	          	['10:01:02',  3900,      4000, 120],
 	          	['10:01:03',  3800,      4000, 120],
 	          	['10:01:04',  3200,      4000, 130],
 	          	['10:01:05',  2800,      4000, 140],
-	          	['10:01:06',  2700,      4000, 100],
-	          	['10:01:07',  2600,      4000, 80],
+	          	['10:01:06',  2700,      4000, 110],
+	          	['10:01:07',  2600,      4000, 110],
 	          	['10:01:08',  2500,      4000, 120],
 	          	['10:01:09',  1400,      4000, 140],
 	          	['10:01:10',  1390,      4000, 140],
 	          	['10:01:11',  1380,      4000, 200],
-	          	['10:01:12',  1290,      4000, 60],
-	          	['10:01:13',  1270,      4000, 70],
-	          	['10:01:14',  1250,      4000, 70],
-	          	['10:01:15',  1180,      4000, 80],
-	          	['10:01:16',  1150,      4000, 70],
+	          	['10:01:12',  1290,      4000, 180],
+	          	['10:01:13',  1270,      4000, 180],
+	          	['10:01:14',  1250,      4000, 170],
+	          	['10:01:15',  1180,      4000, 160],
+	          	['10:01:16',  1150,      4000, 160],
 	          	['10:01:17',  1100,      4000, 120],
 	          	['10:01:18',  1080,      4000, 130],
 	          	['10:01:19',  1070,      4000, 140],
 	          	['10:01:20',  1060,      4000, 150],
 	          	['10:01:21',  1050,      4000, 160],
-	          	['10:01:22',  1040,      4000, 30],
-	          	['10:01:23',  1030,      4000, 40],
-	          	['10:01:24',  1030,      4000, 50],
-	          	['10:01:25',  1030,      4000, 60],
+	          	['10:01:22',  1040,      4000, 120],
+	          	['10:01:23',  1030,      4000, 110],
+	          	['10:01:24',  1030,      4000, 110],
+	          	['10:01:25',  1030,      4000, 110],
 	          	['10:01:26',  1030,      4000, 120],
         		]);
         	
@@ -385,30 +384,27 @@
 	          	legend: 'top',
 	          	height: 600,
 	          	width: 600,
-	          	chartArea: {'width': '70%', 'height': '70%'},
+	          	chartArea: {'width': '70%', 'height': '80%'},
 	          	// Gives each series an axis that matches the vAxes number below.
 		        series: {
 		          0: {targetAxisIndex: 0},
-		          2: {targetAxisIndex: 2}
+		          2: {targetAxisIndex: 1}
 		        },
 		        hAxis: {
     				title: 'Timeline', 
     				slantedText: true,
-    				gridlines: {
-	                	count: 11
-	            	}
+    				
 				},
-				vAxis: {
+				vAxes: {
 					// Adds titles to each axis.
 		          0: {
-		          	title: 'Work Units'
+		          	title: 'Work Units',
 		          },
-		          2: {
-		          	title: 'Slots utilized'
+		          1: {
+		          	title: 'Slots utilized',
 		          }
-      				
-      				
-    			}
+    			},
+    			
 	        };
 
         	var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));

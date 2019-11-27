@@ -32,6 +32,13 @@ const shortLivedJobMaxAge time.Duration = 10 * time.Minute
 
 //os.Getenv("GOOGLE_CLOUD_PROJECT")
 
+type ReservationConfig struct {
+	ReservationTableName    string
+	ReservationColumneNames string
+}
+
+var reservationConfig ReservationConfig
+
 type JobName struct {
 	JobId     string `json:"jobId"`
 	Location  string `json:"location"`
@@ -51,8 +58,8 @@ func BqJobKey(j *bigquery.Job, p string) string {
 }
 
 type Reservation struct {
-	Reservation_ID string
-	Project_ID string
+	Reservation_ID   string
+	Project_ID       string
 	Reservation_Slot float64
 }
 
@@ -65,12 +72,12 @@ type JobDetail struct {
 	Dst           string
 	Priority      string
 	StatementType string
-	Query		  string
+	Query         string
 	Timeline      []TimelineSample
 	//SlotMillis    []int64
 	Updated       time.Time
 	ReservationID string
-	Slots 		  float64
+	Slots         float64
 }
 
 type TimelineSample struct {
@@ -99,7 +106,7 @@ type PushRequest struct {
 type JobJson struct {
 	ProtoPayload struct {
 		AuthenticationInfo struct {
-			UserEmail string	 `json:"principalEmail"`
+			UserEmail string `json:"principalEmail"`
 		} `json:"authenticationInfo"`
 		ServiceData struct {
 			JobInsertResponse struct {
@@ -143,10 +150,10 @@ func (j JobJson) GetJobStatistics() JobStatistics {
 }
 
 type Job struct {
-	Name   JobName
-	UserEmail  string
-	Stats  JobStatistics
-	Detail JobDetail
+	Name      JobName
+	UserEmail string
+	Stats     JobStatistics
+	Detail    JobDetail
 }
 
 func (j Job) LastTimeline() TimelineSample {
@@ -209,12 +216,11 @@ func StateString(s bigquery.State) string {
 // 	Slots          int64	 `json:"slots,number"`
 // }
 
-
 type JobDisplay struct {
 	UserEmail      string    `json:"useremail"`
 	CreateTime     time.Time `json:"createtime,datetime"`
 	StartTime      time.Time `json:"starttime,datetime"`
-	EndTime		   time.Time `json:"endtime,datetime"`
+	EndTime        time.Time `json:"endtime,datetime"`
 	ProjectID      string    `json:"projectid"`
 	JobID          string    `json:"jobid"`
 	Location       string    `json:"location"`
@@ -233,21 +239,21 @@ type JobDisplay struct {
 	StatementType  string    `json:"statementtype"`
 	Query          string    `json:"query"`
 	//SlotMillis     []int64     `json:"slotmillis,number"`
-	Updated        time.Time    `json:"updated,datetime"`
-	ReservationID  string 	 `json:"reservationid"`
-	Slots          float64	 `json:"slots,number"`
+	Updated       time.Time `json:"updated,datetime"`
+	ReservationID string    `json:"reservationid"`
+	Slots         float64   `json:"slots,number"`
 }
 
 type DisplayField struct {
 	Name string `json:"name"`
-	Id string `json:"id"`
+	Id   string `json:"id"`
 }
 
 func GetJobDisplayFields() []DisplayField {
 	dummy := JobDisplay{}
 	val := reflect.ValueOf(dummy)
 	fields := make([]DisplayField, val.NumField())
-	for i:=0; i<val.NumField();i++{
+	for i := 0; i < val.NumField(); i++ {
 		fields[i] = DisplayField{
 			val.Type().Field(i).Name,
 			strings.ToLower(val.Type().Field(i).Name),
@@ -268,7 +274,7 @@ func (j *Job) GetDetail(bqj *bigquery.Job, bqc *bigquery.Client, ctx context.Con
 	if status.Err() != nil {
 		detail.Error = fmt.Sprintf("%v", status.Err())
 	}
-	
+
 	// Potential to improve performance by only query when insert job (not update job)
 
 	key := datastore.NewKey(ctx, "Reservation", j.Name.ProjectId, 0, nil)
@@ -282,8 +288,6 @@ func (j *Job) GetDetail(bqj *bigquery.Job, bqc *bigquery.Client, ctx context.Con
 	detail.ReservationID = reservation.Reservation_ID
 	detail.Slots = reservation.Reservation_Slot
 	log.Debugf(ctx, "detail.ReservvationID: %v", detail.ReservationID)
-
-
 
 	config, err := bqj.Config()
 	if err != nil {
@@ -379,16 +383,16 @@ func gcJsonDate(t time.Time) string {
 }
 
 var (
-	bqClients map[string]*bigquery.Client
-	templates *template.Template
-	nackCounts map[string]int
+	bqClients        map[string]*bigquery.Client
+	templates        *template.Template
+	nackCounts       map[string]int
 	jobDisplayFields []DisplayField
-	domainRegex *regexp.Regexp
+	domainRegex      *regexp.Regexp
 	lastDebugPayload []byte
 )
 
 func domainCheck(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := appengine.NewContext(r)
 		u := user.Current(ctx)
 		if r.Method == "POST" && r.URL.Path == "/_ah/push-handlers/bqo-pusher" {
@@ -405,12 +409,21 @@ func domainCheck(next http.Handler) http.Handler {
 }
 
 func main() {
+	// Read config.json for reservation BQ table
+	file, _ := os.Open("config.json")
+	defer file.Close()
+	decoder := json.NewDecoder(file)
+	reservationConfig := ReservationConfig{}
+	err := decoder.Decode(&reservationConfig)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+
 	bqClients = make(map[string]*bigquery.Client, 0)
 	nackCounts = map[string]int{}
 	templates = template.New("").Funcs(template.FuncMap{"gcJsonDate": gcJsonDate})
 	jobDisplayFields = GetJobDisplayFields()
 	lastDebugPayload = []byte{}
-
 
 	// Uncomment and change domain if you would like to limit users who access to certain domain accounts.
 	//domainRegex = regexp.MustCompile(`@google.com$`)
@@ -443,7 +456,6 @@ func main() {
 
 	// r.HandleFunc("/", listHandler)
 
-
 	// This will serve files under http://localhost:8000/static/<filename>
 	r.PathPrefix("/static/").Handler(http.FileServer(http.Dir(dir)))
 
@@ -465,14 +477,14 @@ func startEndTimeJobsHandler(w http.ResponseWriter, r *http.Request) {
 	startTime, err := time.Parse(time.RFC3339, startTimeStr)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error getting starttime: %v", err), http.StatusBadRequest)
-		return		
+		return
 	}
 	log.Debugf(ctx, "startTime: %v", startTime)
 
 	endTime, err := time.Parse(time.RFC3339, endTimeStr)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error getting endtime: %v", err), http.StatusBadRequest)
-		return		
+		return
 	}
 	log.Debugf(ctx, "endTime: %v", endTime)
 
@@ -537,7 +549,7 @@ func startEndTimeJobsHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	data := struct{
+	data := struct {
 		Data []*JobDisplay `json:"data"`
 	}{
 		jobsDisplay,
@@ -553,7 +565,6 @@ func startEndTimeJobsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-
 
 func jobIdHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
@@ -609,7 +620,7 @@ func jobIdHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	data := struct{
+	data := struct {
 		Data []*JobDisplay `json:"data"`
 	}{
 		jobsDisplay,
@@ -625,10 +636,6 @@ func jobIdHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-
-
-
-
 
 func jobsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
@@ -684,7 +691,7 @@ func jobsHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	data := struct{
+	data := struct {
 		Data []*JobDisplay `json:"data"`
 	}{
 		jobsDisplay,
@@ -750,10 +757,10 @@ func updateProjectJobsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type templateIndexData struct {
-	OrgId	   string
-	User   *user.User
-	Title  string
-	Fields []DisplayField
+	OrgId          string
+	User           *user.User
+	Title          string
+	Fields         []DisplayField
 	UpdateInterval string
 }
 
@@ -852,14 +859,14 @@ func printDatastoreJobs(ctx context.Context, w http.ResponseWriter) error {
 // copy BQ reservation tables to Datastore
 func updateReservationHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
-	// CHECK: project ID from config; 
+	// CHECK: project ID from config;
 	// the project the reservation tables live
 	client, err := getBqClient(ctx, appengine.AppID(ctx))
 	if err != nil {
 		// TODO: Handle error.
 	}
-	queryReservation := client.Query(`SELECT reservation_id, project_id, reservation_slot
-		FROM` + "`festive-terrain-1.slot_reservation.reservation_table`")
+	queryReservation := client.Query(`SELECT ` + reservationConfig.ReservationColumneNames +
+		"FROM `" + reservationConfig.ReservationTableName + "`")
 	itReservation, err := queryReservation.Read(ctx)
 	if err != nil {
 		// TODO: Handle error.
@@ -867,18 +874,18 @@ func updateReservationHandler(w http.ResponseWriter, r *http.Request) {
 
 	for {
 		var reservation_obj Reservation
-		err :=itReservation.Next(&reservation_obj)
+		err := itReservation.Next(&reservation_obj)
 		if err == iterator.Done {
 			break
 		}
 		if err != nil {
 			// TODO: Handle error.
-		}	
+		}
 
 		reservation := &Reservation{
-			Reservation_ID: reservation_obj.Reservation_ID,
-			Project_ID: reservation_obj.Project_ID,
-			Reservation_Slot:  reservation_obj.Reservation_Slot,
+			Reservation_ID:   reservation_obj.Reservation_ID,
+			Project_ID:       reservation_obj.Project_ID,
+			Reservation_Slot: reservation_obj.Reservation_Slot,
 		}
 
 		// Insert into Datastore
@@ -916,8 +923,8 @@ func pushHandler(w http.ResponseWriter, r *http.Request) {
 	log.Debugf(ctx, "message [%v]: %v\n", msg.Message.ID, jobJson.GetJobName().String())
 
 	job := Job{
-		Name:  jobJson.GetJobName(),
-		Stats: jobJson.GetJobStatistics(),
+		Name:      jobJson.GetJobName(),
+		Stats:     jobJson.GetJobStatistics(),
 		UserEmail: jobJson.ProtoPayload.AuthenticationInfo.UserEmail,
 	}
 	if strings.HasPrefix(job.Name.ProjectId, "google.com") {
@@ -980,7 +987,7 @@ func updateProjectJobs(ctx context.Context, project string) error {
 	}
 	dsJobs := make([]*Job, 0)
 	query := datastore.NewQuery("Job").Filter("Name.ProjectId =", project)
-	// runs the query in the given context ctx and returns all keys that match that query, 
+	// runs the query in the given context ctx and returns all keys that match that query,
 	// as well as appending the values to dsJobs
 	dsJobKeys, err := query.GetAll(ctx, &dsJobs)
 	if err != nil {
@@ -996,7 +1003,7 @@ func updateProjectJobs(ctx context.Context, project string) error {
 			return err
 		}
 		log.Debugf(ctx, "Calling detail %v\n", j)
-		// set condition to get job detail for running jobs only 
+		// set condition to get job detail for running jobs only
 		if job.Detail.State != "Done" {
 			job.GetDetail(j, bqc, ctx)
 		}
@@ -1022,10 +1029,10 @@ func updateProjectJobs(ctx context.Context, project string) error {
 			k := BqJobKey(j, project)
 			if job, exists := dsJobMap[k]; exists {
 				log.Debugf(ctx, "Getting detail for %v\n", k)
-				// set condition to get job detail for running jobs only 
+				// set condition to get job detail for running jobs only
 				if job.Detail.State != "Done" {
 					job.GetDetail(j, bqc, ctx)
-				}				
+				}
 				delete(dsJobMap, k)
 			} else {
 				log.Debugf(ctx, "Couldn't find DS entry for %v\n", k)
@@ -1054,7 +1061,7 @@ func updateProjectJobs(ctx context.Context, project string) error {
 	// 	}
 	// }
 
-	// set condition for running jobs only 
+	// set condition for running jobs only
 	if _, err := datastore.PutMulti(ctx, dsJobKeys, dsJobs); err != nil {
 		fmt.Printf("Error saving keys: %v\n", err)
 	}

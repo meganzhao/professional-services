@@ -1,1 +1,5 @@
 .idea/*
+*.back*
+/tf/.terraform/*
+*.tfstate
+terraform.txt

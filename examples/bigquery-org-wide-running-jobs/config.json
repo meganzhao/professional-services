@@ -1,0 +1,4 @@
+{
+    "ReservationTableName": "anand-bq-test-2.Anand_BQ_Test_1.reservation_slot",
+    "ReservationColumneNames": "reservation_id, project_id, reservation_slot"
+}
