@@ -1,7 +1,7 @@
 $(document).ready(function () {
 	$.ajax({
 		type: 'GET',
-		url: 'https://festive-terrain-1.appspot.com/_ah/get-handlers/v1/jobs',
+		url: '/_ah/get-handlers/v1/jobs',
 		data: { get_param: 'value' },
 		dataType: 'json',
 		success: function (data) {

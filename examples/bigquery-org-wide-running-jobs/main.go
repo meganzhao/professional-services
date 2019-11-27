@@ -60,7 +60,7 @@ func BqJobKey(j *bigquery.Job, p string) string {
 type Reservation struct {
 	Reservation_ID   string
 	Project_ID       string
-	Reservation_Slot float64
+	Reservation_Slot int64
 }
 
 type JobDetail struct {
@@ -286,7 +286,7 @@ func (j *Job) GetDetail(bqj *bigquery.Job, bqc *bigquery.Client, ctx context.Con
 	}
 
 	detail.ReservationID = reservation.Reservation_ID
-	detail.Slots = reservation.Reservation_Slot
+	detail.Slots = float64(reservation.Reservation_Slot)
 	log.Debugf(ctx, "detail.ReservvationID: %v", detail.ReservationID)
 
 	config, err := bqj.Config()
@@ -409,16 +409,6 @@ func domainCheck(next http.Handler) http.Handler {
 }
 
 func main() {
-	// Read config.json for reservation BQ table
-	file, _ := os.Open("config.json")
-	defer file.Close()
-	decoder := json.NewDecoder(file)
-	reservationConfig := ReservationConfig{}
-	err := decoder.Decode(&reservationConfig)
-	if err != nil {
-		fmt.Println("error:", err)
-	}
-
 	bqClients = make(map[string]*bigquery.Client, 0)
 	nackCounts = map[string]int{}
 	templates = template.New("").Funcs(template.FuncMap{"gcJsonDate": gcJsonDate})
@@ -858,18 +848,31 @@ func printDatastoreJobs(ctx context.Context, w http.ResponseWriter) error {
 
 // copy BQ reservation tables to Datastore
 func updateReservationHandler(w http.ResponseWriter, r *http.Request) {
+	// Read config.json for reservation BQ table
+	file, _ := os.Open("config.json")
+	defer file.Close()
+	decoder := json.NewDecoder(file)
+	reservationConfig := ReservationConfig{}
+	err := decoder.Decode(&reservationConfig)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+
 	ctx := appengine.NewContext(r)
 	// CHECK: project ID from config;
 	// the project the reservation tables live
 	client, err := getBqClient(ctx, appengine.AppID(ctx))
 	if err != nil {
-		// TODO: Handle error.
+		fmt.Println("error:", err)
 	}
-	queryReservation := client.Query(`SELECT ` + reservationConfig.ReservationColumneNames +
-		"FROM `" + reservationConfig.ReservationTableName + "`")
+	var query = "SELECT " + reservationConfig.ReservationColumneNames + " FROM `" + reservationConfig.ReservationTableName + "`"
+	w.Write([]byte("Reservation table name: " + reservationConfig.ReservationTableName + "\n"))
+	w.Write([]byte("Reservation column name: " + reservationConfig.ReservationColumneNames + "\n"))
+	w.Write([]byte("Query: " + query + "\n"))
+	queryReservation := client.Query(query)
 	itReservation, err := queryReservation.Read(ctx)
 	if err != nil {
-		// TODO: Handle error.
+		fmt.Println("error:", err)
 	}
 
 	for {
@@ -879,7 +882,7 @@ func updateReservationHandler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		if err != nil {
-			// TODO: Handle error.
+			fmt.Println("error:", err)
 		}
 
 		reservation := &Reservation{
