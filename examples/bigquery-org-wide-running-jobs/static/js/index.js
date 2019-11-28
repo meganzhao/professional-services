@@ -1,5 +1,44 @@
-$(document).ready(function () {
-	$.ajax({
+/*
+jQuery(document).ready(function(){
+    callAPI();
+});
+*/
+jQuery.noConflict();
+var isLive = false;
+var interval;
+var d1h = false;
+jQuery("#livebutton").click(function () {
+    
+	if (!isLive) {
+		jQuery("#livestatus").addClass("has-text-danger");
+		isLive = true;
+		interval = setInterval(function () {
+			var today = new Date();
+			var date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate() + ' ' + today.getHours() + ':' + today.getMinutes() + ':' + today.getSeconds();
+			//jQuery("#currenttime").textText=date;
+			document.getElementById('currenttime').innerHTML = date;
+            //jQuery("#currenttime").load(date);
+            callAPI();
+		}, 5000);
+	} else {
+		jQuery("#livestatus").removeClass("has-text-danger");
+		isLive = false;
+		clearInterval(interval);
+	}
+});
+jQuery("#d1h").click(function () {
+
+	if (!d1h) {
+		jQuery("#d1h").addClass("has-background-info has-text-white");
+		d1h = true;
+	} else {
+		jQuery("#d1h").removeClass("has-background-info has-text-white");
+		d1h = false;
+	}
+});
+
+function callAPI() {
+	jQuery.ajax({
 		type: 'GET',
 		url: '/_ah/get-handlers/v1/jobs',
 		data: { get_param: 'value' },
@@ -27,42 +66,7 @@ $(document).ready(function () {
 			});
 		}
 	});
-});
-
-
-
-var isLive = false;
-var interval;
-var d1h = false;
-$("#livebutton").click(function () {
-	if (!isLive) {
-		$("#livestatus").addClass("has-text-danger");
-		isLive = true;
-		interval = setInterval(function () {
-			var today = new Date();
-			var date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate() + ' ' + today.getHours() + ':' + today.getMinutes() + ':' + today.getSeconds();
-			//$("#currenttime").textText=date;
-			document.getElementById('currenttime').innerHTML = date;
-			//$("#currenttime").load(date);
-		}, 1000);
-	} else {
-		$("#livestatus").removeClass("has-text-danger");
-		isLive = false;
-		clearInterval(interval);
-	}
-});
-$("#d1h").click(function () {
-
-	if (!d1h) {
-		$("#d1h").addClass("has-background-info has-text-white");
-		d1h = true;
-	} else {
-		$("#d1h").removeClass("has-background-info has-text-white");
-		d1h = false;
-	}
-});
-
-
+}
 
 
 function drawReservationChart(jsonData) {
@@ -190,17 +194,19 @@ function findSlot(data, reservationId) {
 
 // job list section
 function jobList(data) {
-	$('#job-table').DataTable({
+    jQuery('#job-table').DataTable().destroy();
+	jQuery('#job-table').DataTable({
+        //retrieve: true,
 		// TODO: get data from variable
 		"data": data,
 		"columns": [
 			{
 				"data": "jobid",
 				'createdCell': function (td, cellData, rowData, row, col) {
-					$(td).html('<a>' + cellData + '</a>');
-					$(td).click(
+					jQuery(td).html('<a>' + cellData + '</a>');
+					jQuery(td).click(
 						function () {
-							$(".modal").addClass("is-active");
+							jQuery(".modal").addClass("is-active");
 							drawChartLine(rowData);
 						}
 					);
@@ -210,14 +216,33 @@ function jobList(data) {
 			{ "data": "projectid" },
 			{ "data": "reservationid" },
 			{ "data": "slots" },
-			{ "data": "state" },
+            { "data": "state", 
+              "createdCell": function(td,cellData, rowData, row, col){
+                var activeunits = rowData["activeunits"]
+                , completedunits = rowData["completedunits"]
+                , pendingunits = rowData["pendingunits"]
+                , slotUsage = rowData["slotUsage"]
+                , elapsed = rowData["elapsed"]
+                , starttime = new Date(rowData["starttime"])
+                , jobId = rowData["jobid"]
+                , projectId = rowData["projectid"]
+                , query = rowData["query"];
+                var completedValue = completedunits[completedunits.length - 1];
+                var totalValue = activeunits[activeunits.length - 1] 
+                                + pendingunits[pendingunits.length - 1] 
+                                + completedunits[completedunits.length - 1];
+                  jQuery(td).html('<progress class="progress" value="'+ completedValue 
+                  + '" max="' + totalValue + '">50%</progress>');
+              }
+           
+            },
 		]
 	});
-	$("#modal-close").click(function () {
-		$(".modal").removeClass("is-active");
+	jQuery("#modal-close").click(function () {
+		jQuery(".modal").removeClass("is-active");
 	});
-	$("#modal-close1").click(function () {
-		$(".modal").removeClass("is-active");
+	jQuery("#modal-close1").click(function () {
+		jQuery(".modal").removeClass("is-active");
 	});
 }
 

@@ -1,12 +1,12 @@
 <html>
 <head>
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
-	<script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+	
 	<script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
-	<script src="../static/js/index.js"></script>
-
+	
 	
 	
 </head>
@@ -171,47 +171,49 @@
 			</nav>
 			
 			
-			
-			<div class="row tile is-parent">
-				<div class="table-container tile is-child box">
-					<table id="job-table" class="table is-striped is-narrow is-hoverable is-fullwidth">
-						<thead>
-							<tr>
+			<nav class="panel has-text-white has-background-white">
+				<p class="panel-heading">Job Details</p>
+    			<div class="row tile is-parent">
+    				<div class="table-container tile is-child box">
+    					<table id="job-table" class="table is-striped is-narrow is-hoverable is-fullwidth">
+    						<thead>
+    							<tr>
 
-								<th>Job Name</th>
-								<th>User</th>
-								<th>Project</th>
-								<th>Reservation</th>
-								<th>Number of Slots</th>
-								<th>Status</th>
-							</tr>
-						</thead>
-						
-						<!-- <tbody>
-							<tr>
-								<td id='bq-job-123dfdh9sd9sdf7sd'><a>bq-job-123dfdh9sd9sdf7sd</a></td>
-								<td>aj@google.com</td>
-								<td>project1</td>
-								<td>Reservation1</td>
-								<td>300</td>
-								<td>
-									<progress class="progress" value="50" max="100">50%</progress>
-								</td>
-							</tr>
-							<tr>
-								<td>bq-job-74672-hqyekxy</td>
-								<td>aj@google.com</td>
-								<td>project1</td>
-								<td>Reservation1</td>
-								<td>200</td>
-								<td>
-									<progress class="progress" value="15" max="100">15%</progress>
-								</td>
-							</tr>
-						</tbody> -->
-					</table>
-				</div>
-			</div>
+    								<th>Job Name</th>
+    								<th>User</th>
+    								<th>Project</th>
+    								<th>Reservation</th>
+    								<th>Number of Slots</th>
+    								<th>Status</th>
+    							</tr>
+    						</thead>
+    						
+    						<!-- <tbody>
+    							<tr>
+    								<td id='bq-job-123dfdh9sd9sdf7sd'><a>bq-job-123dfdh9sd9sdf7sd</a></td>
+    								<td>aj@google.com</td>
+    								<td>project1</td>
+    								<td>Reservation1</td>
+    								<td>300</td>
+    								<td>
+    									<progress class="progress" value="50" max="100">50%</progress>
+    								</td>
+    							</tr>
+    							<tr>
+    								<td>bq-job-74672-hqyekxy</td>
+    								<td>aj@google.com</td>
+    								<td>project1</td>
+    								<td>Reservation1</td>
+    								<td>200</td>
+    								<td>
+    									<progress class="progress" value="15" max="100">15%</progress>
+    								</td>
+    							</tr>
+    						</tbody> -->
+    					</table>
+    				</div>
+                </div>
+            </nav>
 		</div>
 
 		
@@ -231,6 +233,8 @@
   			</div>
 		</div>
 
-	</section>
+    </section>
+    <script src="../static/js/index.js"></script>
+
 </body>
 </html>
