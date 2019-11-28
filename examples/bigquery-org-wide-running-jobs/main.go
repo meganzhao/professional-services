@@ -409,6 +409,16 @@ func domainCheck(next http.Handler) http.Handler {
 }
 
 func main() {
+	// Read config.json for reservation BQ table
+	file, _ := os.Open("config.json")
+	defer file.Close()
+	decoder := json.NewDecoder(file)
+	// reservationConfig := ReservationConfig{}
+	err := decoder.Decode(&reservationConfig)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+
 	bqClients = make(map[string]*bigquery.Client, 0)
 	nackCounts = map[string]int{}
 	templates = template.New("").Funcs(template.FuncMap{"gcJsonDate": gcJsonDate})
@@ -848,16 +858,6 @@ func printDatastoreJobs(ctx context.Context, w http.ResponseWriter) error {
 
 // copy BQ reservation tables to Datastore
 func updateReservationHandler(w http.ResponseWriter, r *http.Request) {
-	// Read config.json for reservation BQ table
-	file, _ := os.Open("config.json")
-	defer file.Close()
-	decoder := json.NewDecoder(file)
-	reservationConfig := ReservationConfig{}
-	err := decoder.Decode(&reservationConfig)
-	if err != nil {
-		fmt.Println("error:", err)
-	}
-
 	ctx := appengine.NewContext(r)
 	// CHECK: project ID from config;
 	// the project the reservation tables live
@@ -865,10 +865,8 @@ func updateReservationHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println("error:", err)
 	}
-	var query = "SELECT " + reservationConfig.ReservationColumneNames + " FROM `" + reservationConfig.ReservationTableName + "`"
-	w.Write([]byte("Reservation table name: " + reservationConfig.ReservationTableName + "\n"))
-	w.Write([]byte("Reservation column name: " + reservationConfig.ReservationColumneNames + "\n"))
-	w.Write([]byte("Query: " + query + "\n"))
+	var query = "SELECT " + reservationConfig.ReservationColumneNames + 
+	" FROM `" + reservationConfig.ReservationTableName + "`"
 	queryReservation := client.Query(query)
 	itReservation, err := queryReservation.Read(ctx)
 	if err != nil {
