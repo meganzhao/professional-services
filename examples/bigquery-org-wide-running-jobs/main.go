@@ -60,7 +60,7 @@ func BqJobKey(j *bigquery.Job, p string) string {
 type Reservation struct {
 	Reservation_ID   string
 	Project_ID       string
-	Reservation_Slot int64
+	Reservation_Slot float64
 }
 
 type JobDetail struct {
@@ -865,14 +865,14 @@ func updateReservationHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println("error:", err)
 	}
-	var query = "SELECT " + reservationConfig.ReservationColumneNames + 
+	var query = `SELECT ` + reservationConfig.ReservationColumneNames +
 	" FROM `" + reservationConfig.ReservationTableName + "`"
 	queryReservation := client.Query(query)
 	itReservation, err := queryReservation.Read(ctx)
 	if err != nil {
 		fmt.Println("error:", err)
 	}
-
+	
 	for {
 		var reservation_obj Reservation
 		err := itReservation.Next(&reservation_obj)
@@ -882,7 +882,6 @@ func updateReservationHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			fmt.Println("error:", err)
 		}
-
 		reservation := &Reservation{
 			Reservation_ID:   reservation_obj.Reservation_ID,
 			Project_ID:       reservation_obj.Project_ID,
