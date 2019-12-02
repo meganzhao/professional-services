@@ -6,9 +6,9 @@ jQuery(document).ready(function(){
 jQuery.noConflict();
 var isLive = false;
 var interval;
-var d1h = false;
+var d1h = d2h = d3h = false;
 jQuery("#livebutton").click(function () {
-    
+
 	if (!isLive) {
 		jQuery("#livestatus").addClass("has-text-danger");
 		isLive = true;
@@ -26,16 +26,129 @@ jQuery("#livebutton").click(function () {
 		clearInterval(interval);
 	}
 });
+
 jQuery("#d1h").click(function () {
 
 	if (!d1h) {
 		jQuery("#d1h").addClass("has-background-info has-text-white");
 		d1h = true;
+		jQuery("#hr-input").val("1");
+		if (d2h) {
+			jQuery("#d2h").removeClass("has-background-info has-text-white");
+			d2h = false;
+		}
+		if (d3h) {
+			jQuery("#d3h").removeClass("has-background-info has-text-white");
+			d3h = false;
+		}
 	} else {
 		jQuery("#d1h").removeClass("has-background-info has-text-white");
 		d1h = false;
 	}
 });
+
+jQuery("#d2h").click(function () {
+
+	if (!d2h) {
+		jQuery("#d2h").addClass("has-background-info has-text-white");
+		d2h = true;
+		jQuery("#hr-input").val("2");
+		if (d1h) {
+			jQuery("#d1h").removeClass("has-background-info has-text-white");
+			d1h = false;
+		}
+		if (d3h) {
+			jQuery("#d3h").removeClass("has-background-info has-text-white");
+			d3h = false;
+		}
+	} else {
+		jQuery("#d2h").removeClass("has-background-info has-text-white");
+		d2h = false;
+	}
+});
+
+jQuery("#d3h").click(function () {
+
+	if (!d3h) {
+		jQuery("#d3h").addClass("has-background-info has-text-white");
+		d3h = true;
+		jQuery("#hr-input").val("3");
+		if (d1h) {
+			jQuery("#d1h").removeClass("has-background-info has-text-white");
+			d1h = false;
+		}
+		if (d2h) {
+			jQuery("#d2h").removeClass("has-background-info has-text-white");
+			d2h = false;
+		}		
+	} else {
+		jQuery("#d3h").removeClass("has-background-info has-text-white");
+		d3h = false;
+	}
+});
+
+jQuery("#endtime-button").click(function () {
+
+	var input = document.getElementById("endtime").value;
+	// TODO: check if input in valid yyyy-mm-dd hh:mm:ss format
+	if (/\S/.test(input)) {
+		var endTime = input + "Z";
+	} else {
+		alert("empty");
+	}
+	// convert input format to RFC3339: yyyy-mm-ddThh:mm:ss
+	// e.g. 2019-11-30T12:49:32
+	endTime = endTime.slice(0, 10) + "T" + endTime.slice(11);
+
+	var hours = document.getElementById("hr-input").value;
+	// if the duration input is empty or not in a valid number format
+	if (!/\S/.test(hours) || isNaN(hours)) {
+		alert("Duration hour is not a valid number");
+	} else{
+		var hours = parseInt(hours);
+		var milliseconds = hours * 60 * 60 * 1000;
+	}
+	
+	var endTimeDate = new Date(endTime);
+	var endTimeMills = endTimeDate.getTime();
+	// assume input endTime in UTC
+	endTimeDate = new Date(endTimeMills - 1 * 60 * 60 * 1000);
+	var startTimeDate = new Date(endTimeMills - milliseconds);
+	startEndTimeEndpoint(startTimeDate.toISOString(), endTime);
+});
+
+function startEndTimeEndpoint(startTime, endTime) {
+	console.log('https://festive-terrain-1.appspot.com/_ah/get-handlers/v1/jobs/' + startTime + '/' + endTime)
+	jQuery.ajax({
+		type: 'GET',
+		url: 'https://festive-terrain-1.appspot.com/_ah/get-handlers/v1/jobs/' + startTime + '/' + endTime,
+		data: { get_param: 'value' },
+		dataType: 'json',
+		success: function (data) {
+			console.log(data);
+			data = data["data"];
+			// calculat slot usage
+			for (i in data) {
+				rowData = data[i]
+				const length = rowData["activeunits"].length
+				rowData["slotUsage"] = new Array(length);
+
+				for (j = 0; j < length; j++) {
+					rowData["slotUsage"][j] = rowData["slotmillis"][j] * 1000000 / rowData["elapsed"][j];
+				}
+			}
+			// Load the Visualization API and the package and
+			// set a callback to run when the Google Visualization API is loaded.
+			google.charts.load('current', {
+				'callback': function () {
+					drawReservationChart(data);
+					jobList(data);
+				},
+				'packages': ['treemap', 'corechart']
+			});
+		}
+	});
+}
 
 function callAPI() {
 	jQuery.ajax({
