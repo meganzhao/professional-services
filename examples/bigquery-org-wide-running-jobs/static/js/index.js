@@ -7,6 +7,7 @@ jQuery.noConflict();
 var isLive = false;
 var interval;
 var d1h = d2h = d3h = false;
+const regex = /^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01]) (?:[01]\d|2[0123]):(?:[012345]\d):(?:[012345]\d)$/;
 jQuery("#livebutton").click(function () {
 
 	if (!isLive) {
@@ -90,12 +91,12 @@ jQuery("#d3h").click(function () {
 jQuery("#endtime-button").click(function () {
 
 	var input = document.getElementById("endtime").value;
-	// TODO: check if input in valid yyyy-mm-dd hh:mm:ss format
-	if (/\S/.test(input)) {
-		var endTime = input + "Z";
-	} else {
-		alert("empty");
+	// Check if input in valid yyyy-mm-dd hh:mm:ss format
+	if (!input.match(regex)) {
+		alert("End time must be in the format of yyyy-mm-dd hh:mm:ss");
+		return
 	}
+	var endTime = input + "Z";
 	// convert input format to RFC3339: yyyy-mm-ddThh:mm:ss
 	// e.g. 2019-11-30T12:49:32
 	endTime = endTime.slice(0, 10) + "T" + endTime.slice(11);
