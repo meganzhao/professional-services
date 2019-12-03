@@ -479,28 +479,39 @@ func startEndTimeJobsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Error getting starttime: %v", err), http.StatusBadRequest)
 		return
 	}
-	log.Debugf(ctx, "startTime: %v", startTime)
-
+	log.Debugf(ctx, "endTimeStr: %v", endTimeStr)
 	endTime, err := time.Parse(time.RFC3339, endTimeStr)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error getting endtime: %v", err), http.StatusBadRequest)
 		return
 	}
-	log.Debugf(ctx, "endTime: %v", endTime)
 
-	jobsStartTimeValid := make([]*Job, 0)
-	query := datastore.NewQuery("Job").Filter("Stats.StartTime <=", endTime)
-	//query := datastore.NewQuery("Job")
-	log.Debugf(ctx, "Filtered query: %v", query)
-	_, err = query.GetAll(ctx, &jobsStartTimeValid)
+	jobsValid := make([]*Job, 0)
+	jobs := make([]*Job, 0)
+
+	query := datastore.NewQuery("Job").Filter("Stats.StartTime <=", startTime)
+	_, err = query.GetAll(ctx, &jobsValid)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error getting jobs: %v", err), http.StatusBadRequest)
 		return
 	}
+	for _, j := range jobsValid {
+		// if job is still running or job finishes after start time
+		if j.Stats.EndTime.IsZero() || j.Stats.EndTime.After(startTime) {
+			jobs = append(jobs, j)
+		}
+	}
 
-	jobs := make([]*Job, 0)
-	for _, j := range jobsStartTimeValid {
-		if j.Stats.EndTime.After(startTime) {
+	jobsValid = make([]*Job, 0)
+	query = datastore.NewQuery("Job").Filter("Stats.StartTime >=", startTime)
+	_, err = query.GetAll(ctx, &jobsValid)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error getting jobs: %v", err), http.StatusBadRequest)
+		return
+	}
+	for _, j := range jobsValid {
+		// if job is still running or job finishes after start time
+		if j.Stats.StartTime.Before(endTime) {
 			jobs = append(jobs, j)
 		}
 	}
