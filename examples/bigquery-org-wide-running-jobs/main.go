@@ -486,10 +486,12 @@ func startEndTimeJobsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jobsValid := make([]*Job, 0)
 	jobs := make([]*Job, 0)
 
-	query := datastore.NewQuery("Job").Filter("Stats.StartTime <=", startTime)
+	// Job start time <= start interval && job end time = null
+	jobsValid := make([]*Job, 0)
+	nullTime := time.Time{}
+	query := datastore.NewQuery("Job").Filter("Stats.EndTime =", nullTime)
 	_, err = query.GetAll(ctx, &jobsValid)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error getting jobs: %v", err), http.StatusBadRequest)
@@ -497,22 +499,42 @@ func startEndTimeJobsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, j := range jobsValid {
 		// if job is still running or job finishes after start time
-		if j.Stats.EndTime.IsZero() || j.Stats.EndTime.After(startTime) {
+		if j.Stats.StartTime.Before(startTime) || j.Stats.StartTime.Equal(startTime) {
 			jobs = append(jobs, j)
+			log.Debugf(ctx, ": %v", j.Stats.StartTime, j.Stats.EndTime)
 		}
 	}
 
+	// Job start time <= start interval && job end time > start interval
 	jobsValid = make([]*Job, 0)
-	query = datastore.NewQuery("Job").Filter("Stats.StartTime >=", startTime)
+	query = datastore.NewQuery("Job").Filter("Stats.EndTime >", startTime)
 	_, err = query.GetAll(ctx, &jobsValid)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error getting jobs: %v", err), http.StatusBadRequest)
 		return
 	}
+	log.Debugf(ctx, "Job start time < start interval && job end time > start interval")
+	for _, j := range jobsValid {
+		if j.Stats.StartTime.Before(startTime) || j.Stats.StartTime.Equal(startTime) {
+			jobs = append(jobs, j)
+			log.Debugf(ctx, ": %v", j.Stats.StartTime, j.Stats.EndTime)
+		}
+	}
+
+	// Job start time > start interval && job start time < end interval
+	jobsValid = make([]*Job, 0)
+	query = datastore.NewQuery("Job").Filter("Stats.StartTime >", startTime)
+	_, err = query.GetAll(ctx, &jobsValid)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error getting jobs: %v", err), http.StatusBadRequest)
+		return
+	}
+	log.Debugf(ctx, "Job start time > start interval && job start time < end interval")
 	for _, j := range jobsValid {
 		// if job is still running or job finishes after start time
 		if j.Stats.StartTime.Before(endTime) {
 			jobs = append(jobs, j)
+			log.Debugf(ctx, ": %v", j.Stats.StartTime, j.Stats.EndTime)
 		}
 	}
 
