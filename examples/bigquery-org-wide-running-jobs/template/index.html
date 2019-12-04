@@ -1,6 +1,7 @@
 <html>
 <head>
-	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css">
     <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
@@ -10,7 +11,7 @@
         .tag__custom {
             height: auto !important;
             white-space: pre-line !important;
-            width: 100% !important;
+            
         }
     </style>
 </head>
@@ -66,7 +67,7 @@
 									</span>	
 								</a>
 								<span class="tag has-background-white">
-									<input id="hr-input" class="input" type="text" placeholder="Custom: e.g. 2, 3.5">
+									<input id="hr-input" class="input" type="text" value="1" placeholder="Custom: e.g. 2, 3.5">
 								</span>	
 								hr
 							</div>
@@ -81,7 +82,7 @@
 							</div>
 							<div class="row">
 								<!-- <input id = "endtime" class="input" type="text" placeholder="2019-10-29 23:59:59"> -->
-								<input id = "endtime" class="input" type="text" value="2019-10-29 23:59:59">
+								<input id = "endtime" class="input" type="text" value="2019-12-04 23:59:59">
 								<button id = "endtime-button"  class="button">Go</button>
 							</div>
 						</div>
@@ -172,73 +173,78 @@
 			</nav-->
 			
 			
-			<nav class="panel has-text-white has-background-white">
-				<p class="panel-heading">Job Details</p>
-    			<div class="row tile is-parent">
-    				<div class="table-container tile is-child box">
-    					<table id="job-table" class="display nowrap" style="width:100%">
-    						<thead>
-    							<tr>
-
-    								<th>Job Name</th>
-    								<th>User</th>
-    								<th>Project</th>
-    								<th>Reservation</th>
-    								<th>Slots</th>
-                                    <th>Status</th>
-                                    <th>Start Time</th>
-    							</tr>
-    						</thead>
-    						
-    						<!-- <tbody>
-    							<tr>
-    								<td id='bq-job-123dfdh9sd9sdf7sd'><a>bq-job-123dfdh9sd9sdf7sd</a></td>
-    								<td>aj@google.com</td>
-    								<td>project1</td>
-    								<td>Reservation1</td>
-    								<td>300</td>
-    								<td>
-    									<progress class="progress" value="50" max="100">50%</progress>
-    								</td>
-    							</tr>
-    							<tr>
-    								<td>bq-job-74672-hqyekxy</td>
-    								<td>aj@google.com</td>
-    								<td>project1</td>
-    								<td>Reservation1</td>
-    								<td>200</td>
-    								<td>
-    									<progress class="progress" value="15" max="100">15%</progress>
-    								</td>
-    							</tr>
-    						</tbody> -->
-    					</table>
-    				</div>
-                </div>
-            </nav>
+			
 		</div>
+        <br/>
+		<table id="job-table" class="stripe cell-border" style="width:100%">
+                <thead>
+                        <tr>
 
-		
+                                <th>Job Name</th>
+                                <th>User</th>
+                                <th>Project</th>
+                                <th>Reservation</th>
+                                <th>Slots</th>
+                                <th>Status</th>
+                                <th>Start Time</th>
+                                <th>Total Slot Time <br/>(Day:Hour:Minute.Second)</th>
+                            </tr>
+                </thead>
+                
+                
+            </table>
 		
 		<div class="modal">
   			<div class="modal-background"></div>
  			<div class="modal-card">
 	    		<header class="modal-card-head">
-	      			<p class="modal-card-title">Job Performance</p>
+	      			<p class="modal-card-title">Job Performance Metrics</p>
 	    		</header>
 	    		<section class="modal-card-body">
-                    <div class="columns">
-						<span class="tag is-medium title is-5">Job Id &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span>
-						<span id="jobDetailId" class="tag is-medium tag__custom"></span>
-					</div>
-                    <div class="columns">
-                        <span class="tag is-medium title is-5">Project Id :</span>
-                        <span id="jobDetailProjectId" class="tag is-medium tag__custom"></span>
+                    <div class="table-container">
+                        <table class="table is-striped is-narrow">
+                            <tbody>
+                                <tr>
+                                    <th style="width: 20%;"></th>
+                                    <th style="width: 80%;"></th>                
+                                </tr>
+                                <tr>
+                                    <td >
+                                        <span class="title is-6">Job Id</span>                                            
+                                    </td>
+                                    <td >
+                                        <span id="jobDetailId" class="subtitle is-6 tag__custom"></span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                            <span class="title is-6">Project Id</span>                                           
+                                    </td>
+                                    <td>
+                                            <span id="jobDetailProjectId" class="subtitle is-6 tag__custom"></span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                            <span class="title is-6">Query</span>                                         
+                                    </td>
+                                    <td>
+                                            <span id="jobDetailQuery" class="subtitle is-6 tag__custom"></span>
+                                    </td>
+                                </tr> 
+                                <tr>
+                                    <td>
+                                            <span class="title is-6">Job Kill command</span>                                         
+                                    </td>
+                                    <td>
+                                            <span id="jobKillCommand" class="subtitle is-6 tag__custom"></span>
+                                    </td>
+                                </tr>                                
+                            </tbody>
+                        <!-- Your table content -->
+                        </table>
                     </div>
-                    <div class="columns">
-                        <span class="tag is-medium title is-5">Query &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span>
-                        <span id="jobDetailQuery" class="tag is-medium tag__custom"></span>
-                    </div>
+                    
 	      			<div id="curve_chart" ></div>
 	    		</section>
 	    		<footer class="modal-card-foot">

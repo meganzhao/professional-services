@@ -519,7 +519,10 @@ func testJobsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
+
 func startEndTimeJobsHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Access-Control-Allow-Origin", "*")
+	w.Header().Add("Content-Type", "text/csv")
 	ctx := appengine.NewContext(r)
 	// startTimeStr format as time.Time (not print out format in Datastore)
 	// time input in the format of RFC3339
@@ -654,6 +657,9 @@ func startEndTimeJobsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func jobIdHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Access-Control-Allow-Origin", "*")
+	w.Header().Add("Content-Type", "text/csv")
+
 	ctx := appengine.NewContext(r)
 	jobId := strings.TrimPrefix(r.URL.Path, "/_ah/get-handlers/v1/jobid/")
 	query := datastore.NewQuery("Job").Filter("Name.JobId =", jobId)
@@ -725,6 +731,9 @@ func jobIdHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func jobsHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Access-Control-Allow-Origin", "*")
+	w.Header().Add("Content-Type", "text/csv")
+
 	ctx := appengine.NewContext(r)
 	jobs := make([]*Job, 0)
 	query := datastore.NewQuery("Job").Filter("Detail.State =", "Running")
@@ -953,13 +962,13 @@ func updateReservationHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("error:", err)
 	}
 	var query = `SELECT ` + reservationConfig.ReservationColumneNames +
-	" FROM `" + reservationConfig.ReservationTableName + "`"
+		" FROM `" + reservationConfig.ReservationTableName + "`"
 	queryReservation := client.Query(query)
 	itReservation, err := queryReservation.Read(ctx)
 	if err != nil {
 		fmt.Println("error:", err)
 	}
-	
+
 	for {
 		var reservation_obj Reservation
 		err := itReservation.Next(&reservation_obj)

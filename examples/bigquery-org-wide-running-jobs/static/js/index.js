@@ -3,6 +3,12 @@ jQuery(document).ready(function(){
     callAPI();
 });
 */
+var timeZoneOffset = getTimezoneName();
+function getTimezoneName() {
+    var d = new Date();
+    return d.getTimezoneOffset();
+}
+
 jQuery.noConflict();
 var isLive = false;
 var interval;
@@ -169,10 +175,10 @@ function startEndTimeEndpoint(endTime) {
 	// endTimeDate = new Date(endTimeMills - 1 * 60 * 60 * 1000);
 	var startTime = (new Date(endTimeMills - milliseconds)).toISOString();
 
-	console.log('https://festive-terrain-1.appspot.com/_ah/get-handlers/v1/jobs/' + startTime + '/' + endTime)
+	console.log('https://anand-bq-test-2.appspot.com/_ah/get-handlers/v1/jobs/' + startTime + '/' + endTime)
 	jQuery.ajax({
 		type: 'GET',
-		url: 'https://festive-terrain-1.appspot.com/_ah/get-handlers/v1/jobs/' + startTime + '/' + endTime,
+		url: 'https://anand-bq-test-2.appspot.com/_ah/get-handlers/v1/jobs/' + startTime + '/' + endTime,
 		data: { get_param: 'value' },
 		dataType: 'json',
 		success: function (data) {
@@ -205,7 +211,9 @@ function startEndTimeEndpoint(endTime) {
 function callAPI() {
 	jQuery.ajax({
 		type: 'GET',
-		url: '/_ah/get-handlers/v1/jobs',
+        //url: '/_ah/get-handlers/v1/jobs',
+        
+        url: 'https://anand-bq-test-2.appspot.com/_ah/get-handlers/v1/jobs',
 		data: { get_param: 'value' },
 		dataType: 'json',
 		success: function (data) {
@@ -362,8 +370,9 @@ function jobList(data) {
     jQuery('#job-table').DataTable().destroy();
 	jQuery('#job-table').DataTable({
         "scrollX": true,
-        //retrieve: true,
-		// TODO: get data from variable
+        "scrollY": "800px",
+        "scrollCollapse": true,
+        "paging":         false,
 		"data": data,
 		"columns": [
 			{
@@ -402,7 +411,26 @@ function jobList(data) {
               }
            
             },
-            { "data": "starttime" },
+            { "data": "starttime",
+              "createdCell": function(td,cellData, rowData, row, col){
+                
+                
+                var starttime = new Date(rowData["starttime"]); 
+                
+                  jQuery(td).html(starttime.toLocaleString());
+              }  
+            },
+            { "data": "slotmillis", 
+              "createdCell": function(td,cellData, rowData, row, col){
+                  var slotmillis = rowData["slotmillis"];
+                  var fmtslotsmillis = slotmillis[slotmillis.length - 1];
+                  var seconds = Math.floor((fmtslotsmillis / 1000) % 60);
+                  var minutes = Math.floor((fmtslotsmillis / (1000 * 60)) % 60);
+                  var hours = Math.floor((fmtslotsmillis / (1000 * 60 * 60)) % 24);
+                  var days = Math.floor((fmtslotsmillis / (1000 * 60 * 60 * 24)) );
+                    jQuery(td).html(days + ":" + hours + ":" + minutes + "." + seconds);
+                } 
+            },
 		]
 	});
 	jQuery("#modal-close").click(function () {
@@ -418,7 +446,8 @@ function drawChartLine(rowData) {
 		, elapsed = rowData["elapsed"]
 		, starttime = new Date(rowData["starttime"])
 		, jobId = rowData["jobid"]
-		, projectId = rowData["projectid"]
+        , projectId = rowData["projectid"]
+        , location = rowData["location"]
 		, query = rowData["query"];
 
 
@@ -482,7 +511,17 @@ function drawChartLine(rowData) {
 
     chart.draw(data, options);
  
+    
+
+
     document.getElementById("jobDetailId").innerHTML = jobId;
     document.getElementById("jobDetailQuery").innerHTML = query;
     document.getElementById("jobDetailProjectId").innerHTML = projectId;
+    document.getElementById("jobKillCommand").innerHTML = "bq --location=" + location + " cancel " + jobId;
 }
+
+
+//TODO: 
+// 1. Remove the hardcoding of the API service URL
+// 2. Comment the CORS setting in app.yaml
+// 3. Comment the CORS settings in main.go

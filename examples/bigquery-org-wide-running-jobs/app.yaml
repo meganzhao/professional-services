@@ -7,19 +7,21 @@ handlers:
 - url: /
   static_files: template/index.html
   upload: template/index.html
-  
+  http_headers:
+    Access-Control-Allow-Origin: https://anand-bq-test-2.appspot.com
 
 - url: /_ah/push-handlers/.*
   login: admin
   script: auto
-
+  
 - url: /_ah/get-handlers/.*
   # login: admin
   script: auto
-
+  
 - url: /.*
   # login: admin
   script: auto
+  
 
 
 
