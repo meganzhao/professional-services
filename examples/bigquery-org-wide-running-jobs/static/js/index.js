@@ -6,8 +6,9 @@ jQuery(document).ready(function(){
 jQuery.noConflict();
 var isLive = false;
 var interval;
-var d1h = d2h = d3h = false;
-const regex = /^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01]) (?:[01]\d|2[0123]):(?:[012345]\d):(?:[012345]\d)$/;
+var d1h = d2h = d3h = minuesd1h = plusd1h = false;
+const regexEndTime = /^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01]) (?:[01]\d|2[0123]):(?:[012345]\d):(?:[012345]\d)$/;
+const regexMoveinTime = /[-+]\d+(\.\d+)?hr/;
 jQuery("#livebutton").click(function () {
 
 	if (!isLive) {
@@ -92,19 +93,71 @@ jQuery("#endtime-button").click(function () {
 
 	var input = document.getElementById("endtime").value;
 	// Check if input in valid yyyy-mm-dd hh:mm:ss format
-	if (!input.match(regex)) {
+	if (!input.match(regexEndTime)) {
 		alert("End time must be in the format of yyyy-mm-dd hh:mm:ss");
-		return
+		return;
+	}
+	var endTime = input + "Z";
+	// convert input format to RFC3339: yyyy-mm-ddThh:mm:ss
+	// e.g. 2019-11-30T12:49:32
+	endTime = endTime.slice(0, 10) + "T" + endTime.slice(11);
+	startEndTimeEndpoint(endTime);
+});
+
+
+document.getElementById("minuesd1h").onclick = function () {
+	moveinTime("-", 1)
+};
+
+document.getElementById("plusd1h").onclick = function () {
+	moveinTime("+", 1)
+};
+
+jQuery("#moveintime-button").click(function () {
+	var input = document.getElementById("moveintime-input").value;
+	// Check if input in a valid format
+	if (!input.match(regexMoveinTime)) {
+		alert("Move in time must be in the format of +/-(number)hr");
+		return false;
+	}
+	sign = input.slice(0, 1);
+	hr = Number(input.slice(1, -2));
+	moveinTime(sign, hr);
+});
+
+function moveinTime(sign, hr) {
+	var input = document.getElementById("endtime").value;
+
+	// Check if input in valid yyyy-mm-dd hh:mm:ss format
+	if (!input.match(regexEndTime)) {
+		alert("End time must be in the format of yyyy-mm-dd hh:mm:ss");
+		return false;
 	}
 	var endTime = input + "Z";
 	// convert input format to RFC3339: yyyy-mm-ddThh:mm:ss
 	// e.g. 2019-11-30T12:49:32
 	endTime = endTime.slice(0, 10) + "T" + endTime.slice(11);
 
+	var endTimeDate = new Date(endTime);
+	var endTimeMills = endTimeDate.getTime();
+	if (sign == "+") {
+		newEndTimeDate = (new Date(endTimeMills + hr * 60 * 60 * 1000)).toISOString();
+	} else {
+		newEndTimeDate = (new Date(endTimeMills - hr * 60 * 60 * 1000)).toISOString();
+	}
+	if (startEndTimeEndpoint(newEndTimeDate)){
+		newEndTimeDate = newEndTimeDate.slice(0,10) + " " + newEndTimeDate.slice(11, 19)
+		jQuery("#endtime").val(newEndTimeDate);
+	}
+}
+
+function startEndTimeEndpoint(endTime) {
+
 	var hours = document.getElementById("hr-input").value;
 	// if the duration input is empty or not in a valid number format
 	if (!/\S/.test(hours) || isNaN(hours)) {
 		alert("Duration hour is not a valid number");
+		return false;
 	} else{
 		var hours = parseInt(hours);
 		var milliseconds = hours * 60 * 60 * 1000;
@@ -113,12 +166,9 @@ jQuery("#endtime-button").click(function () {
 	var endTimeDate = new Date(endTime);
 	var endTimeMills = endTimeDate.getTime();
 	// assume input endTime in UTC
-	endTimeDate = new Date(endTimeMills - 1 * 60 * 60 * 1000);
-	var startTimeDate = new Date(endTimeMills - milliseconds);
-	startEndTimeEndpoint(startTimeDate.toISOString(), endTime);
-});
+	// endTimeDate = new Date(endTimeMills - 1 * 60 * 60 * 1000);
+	var startTime = (new Date(endTimeMills - milliseconds)).toISOString();
 
-function startEndTimeEndpoint(startTime, endTime) {
 	console.log('https://festive-terrain-1.appspot.com/_ah/get-handlers/v1/jobs/' + startTime + '/' + endTime)
 	jQuery.ajax({
 		type: 'GET',
@@ -149,6 +199,7 @@ function startEndTimeEndpoint(startTime, endTime) {
 			});
 		}
 	});
+	return true;
 }
 
 function callAPI() {
