@@ -454,6 +454,8 @@ func main() {
 
 	r.HandleFunc("/stats", statsHandler)
 
+	r.HandleFunc("/testJobs", testJobsHandler)
+
 	// r.HandleFunc("/", listHandler)
 
 	// This will serve files under http://localhost:8000/static/<filename>
@@ -464,7 +466,59 @@ func main() {
 	appengine.Main()
 
 }
+func testJobsHandler(w http.ResponseWriter, r *http.Request) {
+	// jobsDisplay := make([]*JobDisplay, len(jobs))
+	// activeunits := make([]int64, 0)
+	// completedunits := make([]int64, 0)
+	// pendingunits := make([]int64, 0)
+	// elapsed := make([]int64, 0)
+	// slotmillis := make([]int64, 0)
 
+	layout := "2006-01-02T15:04:05.000Z"
+	str := "2014-11-12T11:45:26.371Z"
+	t, err := time.Parse(layout, str)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error getting starttime: %v", err), http.StatusBadRequest)
+		return
+	}
+	var jobsDisplay = &JobDisplay{
+		"a@b.com",
+		t,
+		t,
+		t,
+		"anand-bq-test-2",
+		"bquijob_0113hskhd_3933kad",
+		"US",
+		[]int64{1, 3, 4, 5, 6},
+		[]int64{1, 4, 5, 6, 7},
+		[]int64{7, 5, 4, 2, 1},
+		[]int64{1, 2, 3, 4, 5},
+		[]int64{100, 200, 400, 600, 800},
+		"Query",
+		"Running",
+		"",
+		"a@bc.com",
+		"helixdata2:helix.jobs_partitioned_stream",
+		"anand-bq-test-1:_602636a7aa3648bf43185c0776d8e3ed6ecad4e5.anonc5aa7ef2_363e_4039_93b4_f02394288901",
+		"INTERACTIVE",
+		"SELECT",
+		`with Jobs as ( 
+			SELECT *, 
+			) `,
+		//j.Detail.SlotMillis,
+		t,
+		"/pac/test/reservation/",
+		200,
+	}
+
+	ctx := appengine.NewContext(r)
+	k := datastore.NewKey(ctx, "Job", jobsDisplay.Dst, 0, nil)
+	if _, err := datastore.Put(ctx, k, jobsDisplay); err != nil {
+		log.Errorf(ctx, "Couldn't insert into Datastore: %v\n", err)
+		w.Write([]byte("error"))
+	}
+
+}
 func startEndTimeJobsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	// startTimeStr format as time.Time (not print out format in Datastore)

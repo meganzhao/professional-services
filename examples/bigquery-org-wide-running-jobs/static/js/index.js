@@ -17,9 +17,9 @@ jQuery("#livebutton").click(function () {
 		interval = setInterval(function () {
 			var today = new Date();
 			var date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate() + ' ' + today.getHours() + ':' + today.getMinutes() + ':' + today.getSeconds();
-			//jQuery("#currenttime").textText=date;
+			
 			document.getElementById('currenttime').innerHTML = date;
-            //jQuery("#currenttime").load(date);
+            
             callAPI();
 		}, 5000);
 	} else {
@@ -326,7 +326,7 @@ function sum(arr, key) {
 	var total = 0;
 	if (key == "slotUsage") {
 		for (var i = 0; i < arr.length; i++) {
-			console.log(arr);
+			//console.log(arr);
 			row = arr[i];
 			// add the last slot average usage to total
 			total += row[key][row[key].length - 1];
@@ -361,6 +361,7 @@ function findSlot(data, reservationId) {
 function jobList(data) {
     jQuery('#job-table').DataTable().destroy();
 	jQuery('#job-table').DataTable({
+        "scrollX": true,
         //retrieve: true,
 		// TODO: get data from variable
 		"data": data,
@@ -401,12 +402,10 @@ function jobList(data) {
               }
            
             },
+            { "data": "starttime" },
 		]
 	});
 	jQuery("#modal-close").click(function () {
-		jQuery(".modal").removeClass("is-active");
-	});
-	jQuery("#modal-close1").click(function () {
 		jQuery(".modal").removeClass("is-active");
 	});
 }
@@ -445,11 +444,10 @@ function drawChartLine(rowData) {
 	}
 
 	var data = new google.visualization.arrayToDataTable(dataArray);
-
+   
+    
 	var options = {
-		title: "JobId: " + jobId + "\n" +
-			"ProjectId: " + projectId + "\n" +
-			"Query: " + query + "\n",
+		title: "Job performance",
 		pointSize: 2,
 		curveType: 'function',
 		legend: 'top',
@@ -459,7 +457,7 @@ function drawChartLine(rowData) {
 		// Gives each series an axis that matches the vAxes number below.
 		series: {
 			0: { targetAxisIndex: 0 },
-			2: { targetAxisIndex: 2 }
+			3: { targetAxisIndex: 3 }
 		},
 		hAxis: {
 			title: 'Timeline (UTC-6)',
@@ -469,12 +467,12 @@ function drawChartLine(rowData) {
 				count: 11
 			}
 		},
-		vAxis: {
+		vAxes: {
 			// Adds titles to each axis.
 			0: {
 				title: 'Work Units'
 			},
-			2: {
+			3: {
 				title: 'Slots utilized'
 			}
 		}
@@ -482,5 +480,9 @@ function drawChartLine(rowData) {
 
 	var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
 
-	chart.draw(data, options);
+    chart.draw(data, options);
+ 
+    document.getElementById("jobDetailId").innerHTML = jobId;
+    document.getElementById("jobDetailQuery").innerHTML = query;
+    document.getElementById("jobDetailProjectId").innerHTML = projectId;
 }
