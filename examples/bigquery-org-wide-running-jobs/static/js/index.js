@@ -103,11 +103,16 @@ jQuery("#endtime-button").click(function () {
 		alert("End time must be in the format of yyyy-mm-dd hh:mm:ss");
 		return;
 	}
-	var endTime = input + "Z";
+	var localEndTime = input + "Z";
 	// convert input format to RFC3339: yyyy-mm-ddThh:mm:ss
-	// e.g. 2019-11-30T12:49:32
-	endTime = endTime.slice(0, 10) + "T" + endTime.slice(11);
-	startEndTimeEndpoint(endTime);
+	// e.g. 2019-11-30T12:49:32Z
+	localEndTime = new Date(localEndTime.slice(0, 10) + "T" + localEndTime.slice(11));
+
+	// Convert time difference
+	console.log(localEndTime)
+	UTCEndTime = new Date(localEndTime.getTime() + timeZoneOffset * 60 * 1000)
+	console.log(UTCEndTime.toISOString())
+	startEndTimeEndpoint(UTCEndTime);
 });
 
 
@@ -147,9 +152,9 @@ function moveinTime(sign, hr) {
 	var endTimeDate = new Date(endTime);
 	var endTimeMills = endTimeDate.getTime();
 	if (sign == "+") {
-		newEndTimeDate = (new Date(endTimeMills + hr * 60 * 60 * 1000)).toISOString();
+		newEndTimeDate = new Date(endTimeMills + hr * 60 * 60 * 1000);
 	} else {
-		newEndTimeDate = (new Date(endTimeMills - hr * 60 * 60 * 1000)).toISOString();
+		newEndTimeDate = new Date(endTimeMills - hr * 60 * 60 * 1000);
 	}
 	if (startEndTimeEndpoint(newEndTimeDate)){
 		newEndTimeDate = newEndTimeDate.slice(0,10) + " " + newEndTimeDate.slice(11, 19)
@@ -157,7 +162,7 @@ function moveinTime(sign, hr) {
 	}
 }
 
-function startEndTimeEndpoint(endTime) {
+function startEndTimeEndpoint(endTimeDate) {
 
 	var hours = document.getElementById("hr-input").value;
 	// if the duration input is empty or not in a valid number format
@@ -169,10 +174,8 @@ function startEndTimeEndpoint(endTime) {
 		var milliseconds = hours * 60 * 60 * 1000;
 	}
 	
-	var endTimeDate = new Date(endTime);
 	var endTimeMills = endTimeDate.getTime();
-	// assume input endTime in UTC
-	// endTimeDate = new Date(endTimeMills - 1 * 60 * 60 * 1000);
+	var endTime = endTimeDate.toISOString();
 	var startTime = (new Date(endTimeMills - milliseconds)).toISOString();
 
 	console.log('https://anand-bq-test-2.appspot.com/_ah/get-handlers/v1/jobs/' + startTime + '/' + endTime)
