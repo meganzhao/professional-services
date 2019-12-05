@@ -189,9 +189,12 @@ function startEndTimeEndpoint(endTime) {
 				rowData = data[i]
 				const length = rowData["activeunits"].length
 				rowData["slotUsage"] = new Array(length);
-
-				for (j = 0; j < length; j++) {
-					rowData["slotUsage"][j] = rowData["slotmillis"][j] * 1000000 / rowData["elapsed"][j];
+				if (length == 0) {
+					rowData["slotUsage"].push(0);
+				} else {
+					for (j = 0; j < length; j++) {
+						rowData["slotUsage"][j] = rowData["slotmillis"][j] * 1000000 / rowData["elapsed"][j];
+					}
 				}
 			}
 			// Load the Visualization API and the package and
@@ -223,11 +226,15 @@ function callAPI() {
 				rowData = data[i]
 				const length = rowData["activeunits"].length
 				rowData["slotUsage"] = new Array(length);
-
-				for (j = 0; j < length; j++) {
-					rowData["slotUsage"][j] = rowData["slotmillis"][j] * 1000000 / rowData["elapsed"][j];
+				if (length == 0) {
+					rowData["slotUsage"].push(0);
+				} else {
+					for (j = 0; j < length; j++) {
+						rowData["slotUsage"][j] = rowData["slotmillis"][j] * 1000000 / rowData["elapsed"][j];
+					}
 				}
 			}
+			console.log(data)
 			// Load the Visualization API and the package and
 			// set a callback to run when the Google Visualization API is loaded.
 			google.charts.load('current', {
@@ -306,14 +313,14 @@ function reservationUsage(jsonData) {
 				slotUsagebyUser /= slotsbyUser;
 				arr.push([{v: projectId + "/" + email, f: email + 
 					" (Reserved slots: " + slotsbyUser.toFixed(2) + "; slotUsage: " + 
-					slotUsagebyUser.toFixed(2) + "%; number of jobs: " + 
+					(slotUsagebyUser * 100).toFixed(2) + "%; number of jobs: " + 
 					groupbyUser[email].length + ")"}, 
 					projectId, slotsbyUser, slotUsagebyUser]);
 			}			
 			
 			arr.push([{v: projectId, f: projectId + 
 				" (Reserved slots: " + slotsbyProject.toFixed(2) + "; slotUsage: " + 
-				(slotUsagebyProject / slotsbyProject).toFixed(2) + "%; number of users: " + 
+				(slotUsagebyProject / slotsbyProject * 100).toFixed(2) + "%; number of users: " + 
 				Object.keys(groupbyUser).length + ")"}, 
 				reservationId, 0, 0]);
 
@@ -322,7 +329,7 @@ function reservationUsage(jsonData) {
 
 		arr.push([{v: reservationId, f: reservationId + 
 			" (Reserved slots: " + slotsbyReservation.toFixed(2) + "; slotUsage: " + 
-			(slotUsagebyReservation / slotsbyReservation).toFixed(2) + "%; number of projects: " + 
+			(slotUsagebyReservation / slotsbyReservation * 100).toFixed(2) + "%; number of projects: " + 
 			Object.keys(groupbyProject).length + ")"}, 
 			"all", 0, 0]);
 	}
@@ -390,7 +397,12 @@ function jobList(data) {
 			{ "data": "useremail" },
 			{ "data": "projectid" },
 			{ "data": "reservationid" },
-			{ "data": "slots" },
+			{ "data": "slotUsage",
+			  "createdCell": function(td,cellData, rowData, row, col){
+				slotUsage = rowData["slotUsage"]
+				jQuery(td).html((slotUsage[slotUsage.length - 1]).toString());
+			  }  
+		  },
             { "data": "state", 
               "createdCell": function(td,cellData, rowData, row, col){
                 var activeunits = rowData["activeunits"]
