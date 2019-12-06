@@ -157,8 +157,9 @@ function moveinTime(sign, hr) {
 		newEndTimeDate = new Date(endTimeMills - hr * 60 * 60 * 1000);
 	}
 	if (startEndTimeEndpoint(newEndTimeDate)){
-		newEndTimeDate = newEndTimeDate.slice(0,10) + " " + newEndTimeDate.slice(11, 19)
-		jQuery("#endtime").val(newEndTimeDate);
+		newEndTimeDateStr = newEndTimeDate.toISOString()
+		newEndTimeDateStr = newEndTimeDateStr.slice(0,10) + " " + newEndTimeDateStr.slice(11, 19)
+		jQuery("#endtime").val(newEndTimeDateStr);
 	}
 }
 
