@@ -313,7 +313,9 @@ function reservationUsage(jsonData) {
 			for (var email in groupbyUser) {
 				var slotUsagebyUser = sum(groupbyUser[email], "slotUsage");
 				slotUsagebyProject += slotUsagebyUser;
-				slotUsagebyUser /= slotsbyUser;
+				if (slotsbyUser != 0) {
+					slotUsagebyUser /= slotsbyUser;
+				}
 				arr.push([{v: projectId + "/" + email, f: email + 
 					" (Reserved slots: " + slotsbyUser.toFixed(2) + "; slotUsage: " + 
 					(slotUsagebyUser * 100).toFixed(2) + "%; number of jobs: " + 
@@ -336,6 +338,7 @@ function reservationUsage(jsonData) {
 			Object.keys(groupbyProject).length + ")"}, 
 			"all", 0, 0]);
 	}
+	console.log(arr)
 	return arr;
 }
 
