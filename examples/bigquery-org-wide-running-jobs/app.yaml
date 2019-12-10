@@ -4,6 +4,9 @@ handlers:
 - url: /static/js
   static_dir: static/js
 
+- url: /mybulma/css
+  static_dir: mybulma/css
+
 - url: /
   static_files: template/index.html
   upload: template/index.html

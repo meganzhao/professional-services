@@ -499,8 +499,8 @@ function drawChartLine(rowData) {
 		pointSize: 2,
 		curveType: 'function',
 		legend: 'top',
-		height: 600,
-		width: 600,
+		height: 800,
+		width: 1000,
 		chartArea: { 'width': '70%', 'height': '70%' },
 		// Gives each series an axis that matches the vAxes number below.
 		series: {
