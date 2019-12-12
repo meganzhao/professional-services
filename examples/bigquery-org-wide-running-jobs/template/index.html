@@ -1,6 +1,10 @@
 <html>
 
 <head>
+    <!--link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.17.0/build/styles/default.min.css">
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.17.0/build/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script-->
+    
 	<link rel="stylesheet" href="../mybulma/css/mystyles.css">
 	<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css"> -->
 	<link rel="stylesheet" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css">
@@ -186,9 +190,7 @@
 						</div>
 						<div class="tile is-child " id="chart_div" style="width: 400px; height: 400px;"></div>
 						<div class="row">
-							<div class="column">
-
-							</div>
+							<div class="column"></div>
 						</div>
 
 					</div>
@@ -248,67 +250,82 @@
 					<th>Total Slot Time <br />(Day:Hour:Minute.Second)</th>
 				</tr>
 			</thead>
-
-
-		</table>
-
+                
+        </table>
+		
 		<div class="modal">
-			<div class="modal-background"></div>
-			<div class="modal-card">
-				<header class="modal-card-head">
-					<p class="modal-card-title">Job Performance Metrics</p>
-				</header>
-				<section class="modal-card-body">
-					<div class="table-container">
-						<table class="table is-striped is-narrow" width="100%">
-							<tbody>
-								<tr>
-									<th style="width: 25%;"></th>
-									<th style="width: 100%;"></th>
-								</tr>
-								<tr>
-									<td>
-										<span class="title is-6">Job Id</span>
-									</td>
-									<td>
-										<span id="jobDetailId" class="subtitle is-6 tag__custom"></span>
-									</td>
-								</tr>
-								<tr>
-									<td>
-										<span class="title is-6">Project Id</span>
-									</td>
-									<td>
-										<span id="jobDetailProjectId" class="subtitle is-6 tag__custom"></span>
-									</td>
-								</tr>
-								<tr>
-									<td>
-										<span class="title is-6">Query</span>
-									</td>
-									<td>
-										<span id="jobDetailQuery" class="subtitle is-6 tag__custom"></span>
-									</td>
-								</tr>
-								<tr>
-									<td>
-										<span class="title is-6">Job Kill command</span>
-									</td>
-									<td>
-										<span id="jobKillCommand" class="subtitle is-6 tag__custom"></span>
-									</td>
-								</tr>
-							</tbody>
-							<!-- Your table content -->
-						</table>
-					</div>
-
-					<div id="curve_chart"></div>
-				</section>
-				<footer class="modal-card-foot">
-					<button id='modal-close' class="button">Close</button>
-				</footer>
-			</div>
+  			<div class="modal-background"></div>
+ 			<div class="modal-card">
+	    		<header class="modal-card-head">
+	      			<p class="modal-card-title">Job Performance Metrics</p>
+	    		</header>
+	    		<section class="modal-card-body">
+                    <div class="table-container">
+                        <table class="table is-striped is-narrow" width="100%">
+                            <tbody>
+                                <tr>
+                                    <th style="width: 15%;"></th>
+                                    <th style="width: 100%;"></th>                
+                                </tr>
+                                <tr>
+                                    <td><span class="title is-6">Job Id</span></td>
+                                    <td><span id="jobDetailId" class="subtitle is-6 tag__custom"></span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="title is-6">Project Id</span></td>
+                                    <td><span id="jobDetailProjectId" class="subtitle is-6 tag__custom"></span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="title is-6">User</span></td>
+                                    <td><span id="userEmail" class="subtitle is-6 tag__custom"></span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="title is-6">Start Time</span></td>
+                                    <td><span id="startTime" class="subtitle is-6 tag__custom"></span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="title is-6">End Time</span></td>
+                                    <td><span id="endTime" class="subtitle is-6 tag__custom"></span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="title is-6">Running Time</span></td>
+                                    <td><span id="runningTime" class="subtitle is-6 tag__custom"></span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="title is-6">Job Slot Time</span></td>
+                                    <td><span id="jobSlotMS" class="subtitle is-6 tag__custom"></span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="title is-6">Average Slot Used</span></td>
+                                    <td><span id="avgSlotUsed" class="subtitle is-6 tag__custom"></span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="title is-6">Status</span></td>
+                                    <td><span id="jobStatus" class="subtitle is-6 tag__custom"></span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="title is-6">Query</span></td>
+                                    <td><span id="jobDetailQuery" class="html subtitle is-6 tag__custom"></span></td>
+                                </tr> 
+                                <tr>
+                                    <td><span class="title is-6">Job Kill Command</span></td>
+                                    <td><span id="jobKillCommand" class="subtitle is-6 tag__custom"></span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="title is-6">BQ UI Link</span></td>
+                                    <td><span id="pantheonURL" class="subtitle is-6 tag__custom"></span></td>
+                                </tr>
+                            </tbody>
+                        <!-- Your table content -->
+                        </table>
+                    </div>
+                    
+	      			<div id="curve_chart" ></div>
+	    		</section>
+	    		<footer class="modal-card-foot">
+	      			<button id='modal-close' class="button">Close</button>
+	    		</footer>
+  			</div>
 		</div>
 
 	</section>
