@@ -2,7 +2,15 @@
 jQuery(document).ready(function(){
     callAPI();
 });
+
+hljs.configure({useBR: true});
+
 */
+
+
+
+
+
 var timeZoneOffset = getTimezoneName();
 function getTimezoneName() {
     var d = new Date();
@@ -76,6 +84,7 @@ jQuery("#d2h").click(function () {
 });
 
 jQuery("#d3h").click(function () {
+    
 
 	if (!d3h) {
 		jQuery("#d3h").addClass("has-background-info has-text-white");
@@ -96,6 +105,8 @@ jQuery("#d3h").click(function () {
 });
 
 jQuery("#endtime-button").click(function () {
+    //jQuery("#endtime-button").attr("disabled","");
+    jQuery("#endtime-button").addClass("is-loading");
 
 	var input = document.getElementById("endtime").value;
 	// Check if input in valid yyyy-mm-dd hh:mm:ss format
@@ -112,7 +123,14 @@ jQuery("#endtime-button").click(function () {
 	console.log(localEndTime)
 	UTCEndTime = new Date(localEndTime.getTime() + timeZoneOffset * 60 * 1000)
 	console.log(UTCEndTime.toISOString())
-	startEndTimeEndpoint(UTCEndTime);
+    startEndTimeEndpoint(UTCEndTime);
+    //jQuery("#endtime-button").removeAttr("disabled");
+
+    setTimeout(function(){
+        console.log("This is just test code to see the waiting animation on the button.");
+    }, 5000);
+
+    jQuery("#endtime-button").removeClass("is-loading");
 });
 
 
@@ -162,7 +180,20 @@ function moveinTime(sign, hr) {
 		jQuery("#endtime").val(newEndTimeDateStr);
 	}
 }
-
+function cleanData(data){
+    for (var i = 0; i <data.length; i++) {
+        if (data[i] == null) {
+            break;
+        }
+        rowData = data[i];
+        if (rowData["useremail"] == "") {
+            data.pop(i);
+            i--;
+            continue;
+        }
+    }
+    return data;
+}
 function startEndTimeEndpoint(endTimeDate) {
 
 	var hours = document.getElementById("hr-input").value;
@@ -187,11 +218,11 @@ function startEndTimeEndpoint(endTimeDate) {
 		dataType: 'json',
 		success: function (data) {
 			console.log(data);
-			data = data["data"];
+			data = cleanData(data["data"]);
 			// calculat slot usage
 			for (i in data) {
-				rowData = data[i]
-				const length = rowData["activeunits"].length
+                
+				const length = rowData["activeunits"].length;
 				rowData["slotUsage"] = new Array(length);
 				if (length == 0) {
 					rowData["slotUsage"].push(0);
@@ -227,8 +258,13 @@ function callAPI() {
 			data = data["data"];
 			// calculat slot usage
 			for (i in data) {
-				rowData = data[i]
-				const length = rowData["activeunits"].length
+                rowData = data[i];
+                if (rowData["useremail"] == "") {
+                    data.pop(i);
+                    i--;
+                    continue;
+                }
+				const length = rowData["activeunits"].length;
 				rowData["slotUsage"] = new Array(length);
 				if (length == 0) {
 					rowData["slotUsage"].push(0);
@@ -381,13 +417,19 @@ function findSlot(data, reservationId) {
 
 // job list section
 function jobList(data) {
+    data.forEach(element => {
+        element["finalSlotUsage"] = element["slotUsage"][element["slotUsage"].length - 1];
+        element["finalSlotMS"] = element["slotmillis"][element["slotmillis"].length - 1];
+        element["runTime"] = (new Date(element["updated"]) - new Date(element["starttime"]));
+    });
+
     jQuery('#job-table').DataTable().destroy();
 	jQuery('#job-table').DataTable({
+        "data": data,
         "scrollX": true,
         "scrollY": "800px",
         "scrollCollapse": true,
         "paging":         false,
-		"data": data,
 		"columns": [
 			{
 				"data": "jobid",
@@ -403,12 +445,14 @@ function jobList(data) {
 			},
 			{ "data": "useremail" },
 			{ "data": "projectid" },
-			{ "data": "reservationid" },
-			{ "data": "slotUsage",
+            { "data": "reservationid" },
+            
+            { "data": "finalSlotUsage",
 			  "createdCell": function(td,cellData, rowData, row, col){
-				slotUsage = rowData["slotUsage"]
-				jQuery(td).html((slotUsage[slotUsage.length - 1]).toString());
-			  }  
+                slotUsage = Math.floor(rowData["finalSlotUsage"]);
+               
+                jQuery(td).html(formatNumber(slotUsage));
+              }
 		  },
             { "data": "state", 
               "createdCell": function(td,cellData, rowData, row, col){
@@ -425,29 +469,51 @@ function jobList(data) {
                 var totalValue = activeunits[activeunits.length - 1] 
                                 + pendingunits[pendingunits.length - 1] 
                                 + completedunits[completedunits.length - 1];
-                  jQuery(td).html('<progress class="progress" value="'+ completedValue 
-                  + '" max="' + totalValue + '">50%</progress>');
+                if (rowData["state"] == "Done") {
+                    jQuery(td).html('Done');
+                    jQuery(td).css("color", "green");
+                } else {
+                    jQuery(td).html('<progress class="progress" value="'+ completedValue + '" max="' + totalValue + '"></progress>');
+                }
               }
-           
             },
             { "data": "starttime",
               "createdCell": function(td,cellData, rowData, row, col){
-                
-                
-                var starttime = new Date(rowData["starttime"]); 
-                
-                  jQuery(td).html(starttime.toLocaleString());
+                var starttime = new Date(rowData["starttime"]);
+                jQuery(td).attr("data-order", rowData["starttime"]);
+                jQuery(td).attr("data-sort", rowData["starttime"]); 
+                jQuery(td).html(starttime.toLocaleString());
               }  
             },
-            { "data": "slotmillis", 
+            { "data": "updated",
               "createdCell": function(td,cellData, rowData, row, col){
-                  var slotmillis = rowData["slotmillis"];
-                  var fmtslotsmillis = slotmillis[slotmillis.length - 1];
+                var endtime = new Date(rowData["updated"]);
+                jQuery(td).attr("data-order", rowData["updated"]);
+                jQuery(td).attr("data-sort", rowData["updated"]); 
+                jQuery(td).html(endtime.toLocaleString());
+              }  
+            },
+            { "data": "runTime",
+              "createdCell": function(td,cellData, rowData, row, col){
+                  var diffMs = rowData["runTime"];
+                  var diffDays = Math.floor(diffMs / 86400000);                                   // days
+                  var diffHrs = Math.floor((diffMs % 86400000) / 3600000);                        // hours
+                  var diffMins = Math.round(((diffMs % 86400000) % 3600000) / 60000);             // minutes
+                  
+                jQuery(td).attr("data-order", rowData["runTime"]);
+                jQuery(td).attr("data-sort", rowData["runTime"]); 
+                jQuery(td).html(diffDays + "." + diffHrs + "." + diffMins);
+              }  
+            },
+            { "data": "finalSlotMS", 
+              "createdCell": function(td,cellData, rowData, row, col){
+                  var fmtslotsmillis = rowData["finalSlotMS"];
+                  
                   var seconds = Math.floor((fmtslotsmillis / 1000) % 60);
                   var minutes = Math.floor((fmtslotsmillis / (1000 * 60)) % 60);
                   var hours = Math.floor((fmtslotsmillis / (1000 * 60 * 60)) % 24);
                   var days = Math.floor((fmtslotsmillis / (1000 * 60 * 60 * 24)) );
-                    jQuery(td).html(days + ":" + hours + ":" + minutes + "." + seconds);
+                  jQuery(td).html(days + "." + hours + "." + minutes);
                 } 
             },
 		]
@@ -467,19 +533,22 @@ function drawChartLine(rowData) {
 		, jobId = rowData["jobid"]
         , projectId = rowData["projectid"]
         , location = rowData["location"]
-		, query = rowData["query"];
+        , query = rowData["query"]
+        ,jobStatus = rowData["state"]
+        ,userEmail = rowData["useremail"];
 
-
+    document.getElementById('curve_chart').innerHTML = "";
 	const length = rowData["activeunits"].length
 	// number of milliseconds since 1 January 1970 00:00:00
 	starttime = starttime.getTime();
-
+    rowData["elapsed2"] = [];
 	for (i = 0; i < length; i++) {
 		// 1 milliseconds = 1000000 Nanoseconds 
-		rowData["elapsed"][i] = new Date(starttime + rowData["elapsed"][i] / 1000000)
+		rowData["elapsed2"][i] = new Date(starttime + rowData["elapsed"][i] / 1000000)
 	}
 
 	var dataArray = [['elapsed', 'activeunits', 'pendingunits', 'completedunits', 'slotUsage']];
+    
 
 	if (activeunits === undefined || slotUsage === undefined ||
 		pendingunits === undefined || completedunits === undefined ||
@@ -488,11 +557,10 @@ function drawChartLine(rowData) {
 	}
 
 	for (var n = 0; n < activeunits.length; n++) {
-		dataArray.push([elapsed[n], activeunits[n], pendingunits[n], completedunits[n], slotUsage[n]]);
+		dataArray.push([rowData["elapsed2"][n], activeunits[n], pendingunits[n], completedunits[n], slotUsage[n]]);
 	}
 
 	var data = new google.visualization.arrayToDataTable(dataArray);
-   
     
 	var options = {
 		title: "Job performance",
@@ -504,8 +572,8 @@ function drawChartLine(rowData) {
 		chartArea: { 'width': '70%', 'height': '70%' },
 		// Gives each series an axis that matches the vAxes number below.
 		series: {
-			0: { targetAxisIndex: 0 },
-			3: { targetAxisIndex: 3 }
+            3: { targetAxisIndex: 1 },
+			
 		},
 		hAxis: {
 			title: 'Timeline (UTC-6)',
@@ -520,26 +588,58 @@ function drawChartLine(rowData) {
 			0: {
 				title: 'Work Units'
 			},
-			3: {
-				title: 'Slots utilized'
+			1: {
+				title: 'Average Slots Used'
 			}
 		}
 	};
 
 	var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
-
     chart.draw(data, options);
- 
-    
-
 
     document.getElementById("jobDetailId").innerHTML = jobId;
-    document.getElementById("jobDetailQuery").innerHTML = query;
     document.getElementById("jobDetailProjectId").innerHTML = projectId;
+    document.getElementById("userEmail").innerHTML = "<a href=\"mailto:" + userEmail + "?Subject=" + jobId + "\" target=\"_blank\">" + userEmail + "</a>";
+    document.getElementById("startTime").innerHTML = new Date(rowData["starttime"]).toLocaleString();
+    document.getElementById("jobStatus").innerHTML = jobStatus;
+    if (jobStatus == "Done") {
+        document.getElementById("endTime").innerHTML = new Date(rowData["updated"]).toLocaleString();
+    } else {
+        document.getElementById("endTime").innerHTML = "";
+    }
+
+    var diffMs = (new Date(rowData["updated"]) - new Date(rowData["starttime"]));   // milliseconds between now & Christmas
+    var diffDays = Math.floor(diffMs / 86400000);                                   // days
+    var diffHrs = Math.floor((diffMs % 86400000) / 3600000);                        // hours
+    var diffMins = Math.round(((diffMs % 86400000) % 3600000) / 60000);             // minutes
+    document.getElementById("runningTime").innerHTML = diffDays + " Days " + diffHrs + " Hours " + diffMins + " Minutes.";
+
+    var slotmillis = rowData["slotmillis"];
+    var fmtslotsmillis = slotmillis[slotmillis.length - 1];
+    var seconds = Math.floor((fmtslotsmillis / 1000) % 60);
+    var minutes = Math.floor((fmtslotsmillis / (1000 * 60)) % 60);
+    var hours = Math.floor((fmtslotsmillis / (1000 * 60 * 60)) % 24);
+    var days = Math.floor((fmtslotsmillis / (1000 * 60 * 60 * 24)) );
+    document.getElementById("jobSlotMS").innerHTML = days + " Days " + hours + " Hours " + minutes + " Minutes.";
+
+    document.getElementById("avgSlotUsed").innerHTML = formatNumber(Math.floor(rowData["slotUsage"][rowData["slotUsage"].length - 1]));
+
+    document.getElementById("jobDetailQuery").innerHTML = query;
+    /*
+    This is for highlighting SQL code but not working currently.
+    document.querySelectorAll("#jobDetailQuery").forEach((block) => {
+        hljs.highlightBlock(block);
+      });
+    "<pre><code class=\"sql\">" + query + "</code></pre>";
+    */
     document.getElementById("jobKillCommand").innerHTML = "bq --location=" + location + " cancel " + jobId;
+    var pantheonURL = "https://pantheon.corp.google.com/bigquery?project=" + projectId + "&j=bq:" + location + ":" + jobId + "&page=queryresults";
+    document.getElementById("pantheonURL").innerHTML = "<a href=\"" + pantheonURL + "\" target=\"_blank\">Open BQ UI for the job</a>";
 }
 
-
+function formatNumber(num) {
+    return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
+  }
 //TODO: 
 // 1. Remove the hardcoding of the API service URL
 // 2. Comment the CORS setting in app.yaml
