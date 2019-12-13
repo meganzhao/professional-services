@@ -60,7 +60,7 @@ func BqJobKey(j *bigquery.Job, p string) string {
 type Reservation struct {
 	Reservation_ID   string
 	Project_ID       string
-	Reservation_Slot float64
+	Reservation_Slot int64
 }
 
 type JobDetail struct {
@@ -77,7 +77,7 @@ type JobDetail struct {
 	//SlotMillis    []int64
 	Updated       time.Time
 	ReservationID string
-	Slots         float64
+	Slots         int64
 }
 
 type TimelineSample struct {
@@ -241,7 +241,7 @@ type JobDisplay struct {
 	//SlotMillis     []int64     `json:"slotmillis,number"`
 	Updated       time.Time `json:"updated,datetime"`
 	ReservationID string    `json:"reservationid"`
-	Slots         float64   `json:"slots,number"`
+	Slots         int64   `json:"slots,number"`
 }
 
 type DisplayField struct {
@@ -286,7 +286,7 @@ func (j *Job) GetDetail(bqj *bigquery.Job, bqc *bigquery.Client, ctx context.Con
 	}
 
 	detail.ReservationID = reservation.Reservation_ID
-	detail.Slots = float64(reservation.Reservation_Slot)
+	detail.Slots = int64(reservation.Reservation_Slot)
 	log.Debugf(ctx, "detail.ReservvationID: %v", detail.ReservationID)
 
 	config, err := bqj.Config()
