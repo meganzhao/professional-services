@@ -60,7 +60,7 @@ func BqJobKey(j *bigquery.Job, p string) string {
 type Reservation struct {
 	Reservation_ID   string
 	Project_ID       string
-	Reservation_Slot int64
+	Reservation_Slot float64
 }
 
 type JobDetail struct {
@@ -77,7 +77,7 @@ type JobDetail struct {
 	//SlotMillis    []int64
 	Updated       time.Time
 	ReservationID string
-	Slots         int64
+	Slots         float64
 }
 
 type TimelineSample struct {
@@ -241,7 +241,7 @@ type JobDisplay struct {
 	//SlotMillis     []int64     `json:"slotmillis,number"`
 	Updated       time.Time `json:"updated,datetime"`
 	ReservationID string    `json:"reservationid"`
-	Slots         int64   `json:"slots,number"`
+	Slots         float64   `json:"slots,number"`
 }
 
 type DisplayField struct {
@@ -286,7 +286,7 @@ func (j *Job) GetDetail(bqj *bigquery.Job, bqc *bigquery.Client, ctx context.Con
 	}
 
 	detail.ReservationID = reservation.Reservation_ID
-	detail.Slots = reservation.Reservation_Slot
+	detail.Slots = float64(reservation.Reservation_Slot)
 	log.Debugf(ctx, "detail.ReservvationID: %v", detail.ReservationID)
 
 	config, err := bqj.Config()
@@ -1023,7 +1023,6 @@ func pushHandler(w http.ResponseWriter, r *http.Request) {
 		Stats:     jobJson.GetJobStatistics(),
 		UserEmail: jobJson.ProtoPayload.AuthenticationInfo.UserEmail,
 	}
-	log.Debugf(ctx, "Job info: ", job)
 	if strings.HasPrefix(job.Name.ProjectId, "google.com") {
 		log.Debugf(ctx, "Msg from google.com project, ignoring")
 		lastDebugPayload = msg.Message.Data
@@ -1207,10 +1206,6 @@ func jobInsert(ctx context.Context, j Job) error {
 			return nil
 		}
 	}
-	log.Debugf(ctx, "Job insert")
-	log.Debugf(ctx, "Update time:", j.Detail.Updated)
-	log.Debugf(ctx, "Update time:", j)
-	
 	k := datastore.NewKey(ctx, "Job", j.Name.String(), 0, nil)
 	log.Debugf(ctx, "Saving %v to Datastore\n", j.Name.String())
 	if _, err := datastore.Put(ctx, k, &j); err != nil {
@@ -1226,9 +1221,6 @@ func jobComplete(ctx context.Context, j Job) error {
 			delete(nackCounts, k)
 		}
 	}
-	log.Debugf(ctx, "Job complete")
-	log.Debugf(ctx, "Update time:", j)
-	log.Debugf(ctx, "Update time:", j.Detail.Updated)
 	k := datastore.NewKey(ctx, "Job", j.Name.String(), 0, nil)
 	// Has the job been inserted?
 	if !jobObservedRead(ctx, j) {
@@ -1254,16 +1246,8 @@ func jobComplete(ctx context.Context, j Job) error {
 
 	var existedJob Job
 	err := datastore.Get(ctx, k, &existedJob)
-	if err != nil{
+	if err != nil {
 		log.Debugf(ctx, "Can't retrieve job entry from Datastore")
-		return err
-	}
-	if j.Stats.EndTime.IsZero(){
-		log.Debugf(ctx, "Job is done but no endtime, delete entry from Datastore")
-		if err = datastore.Delete(ctx, k); err != nil {
-			return err
-		}
-		return nil
 	}
 	existedJob.Stats.EndTime = j.Stats.EndTime
 	existedJob.Detail.Error = j.Detail.Error
