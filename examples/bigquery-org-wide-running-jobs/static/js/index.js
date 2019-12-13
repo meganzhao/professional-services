@@ -181,18 +181,18 @@ function moveinTime(sign, hr) {
 	}
 }
 function cleanData(data){
+	processedData = []
     for (var i = 0; i <data.length; i++) {
         if (data[i] == null) {
             break;
         }
         rowData = data[i];
         if (rowData["useremail"] == "") {
-            data.pop(i);
-            i--;
             continue;
-        }
-    }
-    return data;
+		}
+		processedData.push(rowData)
+	}
+    return processedData;
 }
 function startEndTimeEndpoint(endTimeDate) {
 
@@ -218,11 +218,12 @@ function startEndTimeEndpoint(endTimeDate) {
 		dataType: 'json',
 		success: function (data) {
 			data = data["data"];
-			cleanData = [];
+			processedData = [];
 			// calculat slot usage
 			for (i in data) {
                 rowData = data[i];
                 if (rowData["useremail"] == "") {
+					console.log("skipping because username is missing");
                     continue;
 				}
 				const length = rowData["activeunits"].length;
@@ -234,15 +235,15 @@ function startEndTimeEndpoint(endTimeDate) {
 						rowData["slotUsage"][j] = rowData["slotmillis"][j] * 1000000 / rowData["elapsed"][j];
 					}
 				}
-				cleanData.push(rowData);
+				processedData.push(rowData);
 			}
-			console.log(cleanData)
+			console.log(processedData)
 			// Load the Visualization API and the package and
 			// set a callback to run when the Google Visualization API is loaded.
 			google.charts.load('current', {
 				'callback': function () {
-					drawReservationChart(cleanData);
-					jobList(cleanData);
+					drawReservationChart(processedData);
+					jobList(processedData);
 				},
 				'packages': ['treemap', 'corechart']
 			});
@@ -261,11 +262,12 @@ function callAPI() {
 		dataType: 'json',
 		success: function (data) {
 			data = data["data"];
-			cleanData = [];
+			processedData = [];
 			// calculat slot usage
 			for (i in data) {
                 rowData = data[i];
                 if (rowData["useremail"] == "") {
+					console.log("skipping because username is missing");
                     continue;
                 }
 				const length = rowData["activeunits"].length;
@@ -277,15 +279,15 @@ function callAPI() {
 						rowData["slotUsage"][j] = rowData["slotmillis"][j] * 1000000 / rowData["elapsed"][j];
 					}
 				}
-				cleanData.push(rowData);
+				processedData.push(rowData);
 			}
-			console.log(cleanData)
+			console.log(processedData)
 			// Load the Visualization API and the package and
 			// set a callback to run when the Google Visualization API is loaded.
 			google.charts.load('current', {
 				'callback': function () {
-					drawReservationChart(cleanData);
-					jobList(cleanData);
+					drawReservationChart(processedData);
+					jobList(processedData);
 				},
 				'packages': ['treemap', 'corechart']
 			});
@@ -491,12 +493,12 @@ function jobList(data) {
                 jQuery(td).html(starttime.toLocaleString());
               }  
             },
-            { "data": "endtime",
+            { "data": "updated",
               "createdCell": function(td,cellData, rowData, row, col){
-                var endtime = new Date(rowData["endtime"]);
-                jQuery(td).attr("data-order", rowData["endtime"]);
-                jQuery(td).attr("data-sort", rowData["endtime"]); 
-                jQuery(td).html(endtime.toLocaleString());
+                var updated = new Date(rowData["updated"]);
+                jQuery(td).attr("data-order", rowData["updated"]);
+                jQuery(td).attr("data-sort", rowData["updated"]); 
+                jQuery(td).html(updated.toLocaleString());
               }  
             },
             { "data": "runTime",

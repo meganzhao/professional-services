@@ -547,8 +547,8 @@ func startEndTimeJobsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Job start time <= start interval && job end time = null and job state is running
 	jobsValid := make([]*Job, 0)
-	nullTime := time.Time{}
-	query := datastore.NewQuery("Job").Filter("Stats.EndTime =", nullTime).Filter("Detail.State =", "Running")
+	// nullTime := time.Time{}
+	query := datastore.NewQuery("Job").Filter("Detail.Updated >", startTime)
 	_, err = query.GetAll(ctx, &jobsValid)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error getting jobs: %v", err), http.StatusBadRequest)
@@ -562,21 +562,21 @@ func startEndTimeJobsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Job start time <= start interval && job end time > start interval
-	jobsValid = make([]*Job, 0)
-	query = datastore.NewQuery("Job").Filter("Stats.EndTime >", startTime)
-	_, err = query.GetAll(ctx, &jobsValid)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Error getting jobs: %v", err), http.StatusBadRequest)
-		return
-	}
-	log.Debugf(ctx, "Job start time < start interval && job end time > start interval")
-	for _, j := range jobsValid {
-		if j.Stats.StartTime.Before(startTime) || j.Stats.StartTime.Equal(startTime) {
-			jobs = append(jobs, j)
-			log.Debugf(ctx, ": %v", j.Stats.StartTime, j.Stats.EndTime)
-		}
-	}
+	// // Job start time <= start interval && job end time > start interval
+	// jobsValid = make([]*Job, 0)
+	// query = datastore.NewQuery("Job").Filter("Detail.Updated >", startTime)
+	// _, err = query.GetAll(ctx, &jobsValid)
+	// if err != nil {
+	// 	http.Error(w, fmt.Sprintf("Error getting jobs: %v", err), http.StatusBadRequest)
+	// 	return
+	// }
+	// log.Debugf(ctx, "Job start time < start interval && job end time > start interval")
+	// for _, j := range jobsValid {
+	// 	if j.Stats.StartTime.Before(startTime) || j.Stats.StartTime.Equal(startTime) {
+	// 		jobs = append(jobs, j)
+	// 		log.Debugf(ctx, ": %v", j.Stats.StartTime, j.Stats.EndTime)
+	// 	}
+	// }
 
 	// Job start time > start interval && job start time < end interval
 	jobsValid = make([]*Job, 0)
@@ -1001,6 +1001,8 @@ func pushHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	msg := &PushRequest{}
 	var jobJson JobJson
+	
+	
 
 	if err := json.NewDecoder(r.Body).Decode(msg); err != nil {
 		http.Error(w, fmt.Sprintf("Coulnd't decode msg body: %v", err), http.StatusBadRequest)
@@ -1013,7 +1015,8 @@ func pushHandler(w http.ResponseWriter, r *http.Request) {
 		log.Errorf(ctx, "Couldn't decode job: %v\n", err)
 		return
 	}
-
+	// log.Debugf(ctx, "JobJson: %v", JobJson)
+	// w.Write([]byte(jsonParser.Decode(&jobJson)))
 	if jobJson.GetJobName().JobId == "" {
 		http.Error(w, fmt.Sprintf("No JobID for Job"), http.StatusBadRequest)
 		log.Errorf(ctx, "No JobID for job\n")
@@ -1021,6 +1024,7 @@ func pushHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Debugf(ctx, "message [%v]: %v\n", msg.Message.ID, jobJson.GetJobName().String())
+	log.Debugf(ctx, "message [%v]: %v\n", msg.Message.ID, jobJson.ProtoPayload.AuthenticationInfo.UserEmail)
 
 	job := Job{
 		Name:      jobJson.GetJobName(),
@@ -1204,11 +1208,14 @@ func jobInsert(ctx context.Context, j Job) error {
 	}
 	if err := updateJob(ctx, &j); err != nil {
 		log.Debugf(ctx, "Error updating job during insert: %v\n", err)
-	} else {
-		if j.Detail.State == "Done" {
-			log.Debugf(ctx, "Job complete, skipping insert\n")
-			return nil
-		}
+	}
+	if j.UserEmail == "" {
+		log.Debugf(ctx, "No user email for job insert, skipping insert\n")
+		// return nil		
+	}
+	if j.Detail.State == "Done" {
+		log.Debugf(ctx, "Job complete, skipping insert\n")
+		return nil
 	}
 	k := datastore.NewKey(ctx, "Job", j.Name.String(), 0, nil)
 	log.Debugf(ctx, "Saving %v to Datastore\n", j.Name.String())
