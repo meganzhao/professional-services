@@ -128,7 +128,7 @@ jQuery("#endtime-button").click(function () {
 
     setTimeout(function(){
         console.log("This is just test code to see the waiting animation on the button.");
-    }, 5000);
+    }, 100);
 
     jQuery("#endtime-button").removeClass("is-loading");
 });
@@ -181,7 +181,8 @@ function moveinTime(sign, hr) {
 	}
 }
 function cleanData(data){
-	processedData = [];
+    processedData = [];
+    if (data == null) return processedData;
     for (var i = 0; i <data.length; i++) {
         if (data[i] == null) {
             break;
@@ -218,13 +219,11 @@ function startEndTimeEndpoint(endTimeDate) {
 		dataType: 'json',
 		success: function (data) {
             var processedData = [];
-			console.log(data);
-			data = cleanData(data);;
+			console.log(data.data);
+			data = cleanData(data.data);;
 			// calculat slot usage
 			for (i in data) {
                 rowData = data[i];
-				const length = rowData["activeunits"].length;
-				const length = rowData["slotmillis"].length;
 				const length = rowData["slotmillis"].length;
 				rowData["slotUsage"] = new Array(length);
 				if (length == 0) {
@@ -261,9 +260,7 @@ function callAPI() {
 		dataType: 'json',
 		success: function (data) {
             var processedData = [];
-			data = data["data"];
-			processedData = [];
-            data = cleanData(data["data"]);
+            data = cleanData(data.data);
 			// calculat slot usage
 			for (i in data) {
                 rowData = data[i];
@@ -292,8 +289,9 @@ function callAPI() {
 	});
 }
 
-
+var jsonSaveData;
 function drawReservationChart(jsonData) {
+    jsonSaveData = jsonData;
 	var data = google.visualization.arrayToDataTable(reservationUsage(jsonData));
 	tree = new google.visualization.TreeMap(document.getElementById('chart_div'));
 	tree.draw(data, {
@@ -310,7 +308,23 @@ function drawReservationChart(jsonData) {
 		var size = 10;
 		var value = 20;
 		if (selectedItem) {
-			var row = selectedItem.row;
+            var row = selectedItem.row;
+            var selectedNode = data.getValue(row, 0);
+            var parentNode = data.getValue(row, 1);
+            var value = 'The user selected ' + selectedNode +
+            ', ' + parentNode + 
+            ', ' + data.getValue(row, 2) +
+            ', ' + data.getValue(row, 3);
+            console.log(value);
+            if (parentNode == 'all') {
+                filterData = jsonSaveData;
+                filterData = filterData.filter(function(record) {
+                    return record.reservationid == selectedNode;
+                });
+                jobList(filterData);
+            } else {
+                jobList(jsonSaveData);
+            }
 			//alert('The user selected ' + value);
 			/*
 			alert(
