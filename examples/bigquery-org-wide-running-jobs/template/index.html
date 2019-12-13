@@ -13,12 +13,22 @@
 	
 	<script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
 	<style>
-        .tag__custom {
-            height: auto !important;
-            white-space: pre-line !important;
-            
-        }
-    </style>
+		.tag__custom {
+			height: auto !important;
+			white-space: pre-line !important;
+		}
+		.dropdown-btn{
+			padding: 0;
+			border: none;
+			background: none;
+			width: 40px;
+        	height: 10px;
+		}
+		.fa-question-circle{
+			width: 25px !important;
+    		height: 25px !important;
+		}
+	</style>
     
 </head>
 <!-- set time out -->
@@ -51,7 +61,29 @@
 				</div>	
 			</div>
 			<nav class="panel has-text-white has-background-white">
-				<p class="panel-heading ">Playback Setting</p>
+				<div class="panel-heading ">
+					
+					Playback Setting
+
+					<div class="panel-title dropdown is-hoverable is-pulled-right">
+						<div class="dropdown-trigger">
+							<button class="button dropdown-btn" aria-haspopup="true" aria-controls="dropdown-menu4">
+								<span class="icon is-small">
+									<i class="fas fa-question-circle" aria-hidden="true"></i>
+								</span>
+							</button>
+						</div>
+						<div class="dropdown-menu" id="dropdown-menu4" role="menu">
+							<div class="dropdown-content">
+								<div class="dropdown-item">
+									<p>1. Type in the end time (YYYY-MM-DD HH:MM:SS) 2. Click one of the duration hrs or 
+										input duration hours 3. Press Go to see all the jobs running in this period</p>
+								</div>
+							</div>
+						</div>
+					</div>
+
+				</div>
 
 				<div class="panel-block">
 					<div class="row">
@@ -124,7 +156,26 @@
 
 			<nav class="panel has-text-white has-background-white">
                 <!--p class="panel-heading has-text-white has-background-info">Reservation Usage</p-->
-                <p class="panel-heading">Reservation Usage</p>
+				<div class="panel-heading ">
+					Reservation Usage
+					<div class="panel-title dropdown is-hoverable is-pulled-right">
+						<div class="dropdown-trigger">
+							<button class="button dropdown-btn" aria-haspopup="true" aria-controls="dropdown-menu4">
+								<span class="icon is-small">
+									<i class="fas fa-question-circle" aria-hidden="true"></i>
+								</span>
+							</button>
+						</div>
+						<div class="dropdown-menu" id="dropdown-menu4" role="menu">
+							<div class="dropdown-content">
+								<div class="dropdown-item">
+									<p>This section shows the reserved slots and actual slot usage in the reservation, project, user levels. Color is associated with the slot usage; Block size is associated with the reserved slot</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
 				<div class="panel-block">
 					<div class="row tile">
 						<div class="row">
