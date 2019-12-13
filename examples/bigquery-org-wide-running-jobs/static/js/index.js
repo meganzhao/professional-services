@@ -181,7 +181,7 @@ function moveinTime(sign, hr) {
 	}
 }
 function cleanData(data){
-	processedData = []
+	processedData = [];
     for (var i = 0; i <data.length; i++) {
         if (data[i] == null) {
             break;
@@ -217,16 +217,15 @@ function startEndTimeEndpoint(endTimeDate) {
 		data: { get_param: 'value' },
 		dataType: 'json',
 		success: function (data) {
-			data = data["data"];
-			processedData = [];
+            var processedData = [];
+			console.log(data);
+			data = cleanData(data);;
 			// calculat slot usage
 			for (i in data) {
                 rowData = data[i];
-                if (rowData["useremail"] == "") {
-					console.log("skipping because username is missing");
-                    continue;
-				}
 				const length = rowData["activeunits"].length;
+				const length = rowData["slotmillis"].length;
+				const length = rowData["slotmillis"].length;
 				rowData["slotUsage"] = new Array(length);
 				if (length == 0) {
 					rowData["slotUsage"].push(0);
@@ -261,16 +260,14 @@ function callAPI() {
 		data: { get_param: 'value' },
 		dataType: 'json',
 		success: function (data) {
+            var processedData = [];
 			data = data["data"];
 			processedData = [];
+            data = cleanData(data["data"]);
 			// calculat slot usage
 			for (i in data) {
                 rowData = data[i];
-                if (rowData["useremail"] == "") {
-					console.log("skipping because username is missing");
-                    continue;
-                }
-				const length = rowData["activeunits"].length;
+				const length = rowData["slotmillis"].length;
 				rowData["slotUsage"] = new Array(length);
 				if (length == 0) {
 					rowData["slotUsage"].push(0);
