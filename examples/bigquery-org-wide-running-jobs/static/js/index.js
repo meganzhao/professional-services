@@ -217,11 +217,14 @@ function startEndTimeEndpoint(endTimeDate) {
 		data: { get_param: 'value' },
 		dataType: 'json',
 		success: function (data) {
-			console.log(data);
-			data = cleanData(data["data"]);
+			data = data["data"];
+			cleanData = [];
 			// calculat slot usage
 			for (i in data) {
-                
+                rowData = data[i];
+                if (rowData["useremail"] == "") {
+                    continue;
+				}
 				const length = rowData["activeunits"].length;
 				rowData["slotUsage"] = new Array(length);
 				if (length == 0) {
@@ -231,13 +234,15 @@ function startEndTimeEndpoint(endTimeDate) {
 						rowData["slotUsage"][j] = rowData["slotmillis"][j] * 1000000 / rowData["elapsed"][j];
 					}
 				}
+				cleanData.push(rowData);
 			}
+			console.log(cleanData)
 			// Load the Visualization API and the package and
 			// set a callback to run when the Google Visualization API is loaded.
 			google.charts.load('current', {
 				'callback': function () {
-					drawReservationChart(data);
-					jobList(data);
+					drawReservationChart(cleanData);
+					jobList(cleanData);
 				},
 				'packages': ['treemap', 'corechart']
 			});
@@ -256,12 +261,11 @@ function callAPI() {
 		dataType: 'json',
 		success: function (data) {
 			data = data["data"];
+			cleanData = [];
 			// calculat slot usage
 			for (i in data) {
                 rowData = data[i];
                 if (rowData["useremail"] == "") {
-                    data.pop(i);
-                    i--;
                     continue;
                 }
 				const length = rowData["activeunits"].length;
@@ -273,14 +277,15 @@ function callAPI() {
 						rowData["slotUsage"][j] = rowData["slotmillis"][j] * 1000000 / rowData["elapsed"][j];
 					}
 				}
+				cleanData.push(rowData);
 			}
-			console.log(data)
+			console.log(cleanData)
 			// Load the Visualization API and the package and
 			// set a callback to run when the Google Visualization API is loaded.
 			google.charts.load('current', {
 				'callback': function () {
-					drawReservationChart(data);
-					jobList(data);
+					drawReservationChart(cleanData);
+					jobList(cleanData);
 				},
 				'packages': ['treemap', 'corechart']
 			});
@@ -383,6 +388,7 @@ function reservationUsage(jsonData) {
 function sum(arr, key) {
 	var total = 0;
 	if (key == "slotUsage") {
+		console.log(arr)
 		for (var i = 0; i < arr.length; i++) {
 			//console.log(arr);
 			row = arr[i];

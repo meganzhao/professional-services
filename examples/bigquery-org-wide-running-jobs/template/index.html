@@ -1,5 +1,4 @@
 <html>
-
 <head>
     <!--link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.17.0/build/styles/default.min.css">
     <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.17.0/build/highlight.min.js"></script>
@@ -7,17 +6,16 @@
     
 	<link rel="stylesheet" href="../mybulma/css/mystyles.css">
 	<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css"> -->
-	<link rel="stylesheet" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css">
-	<script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css">
+    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-
+	
 	<script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
 	<style>
 		.tag__custom {
 			height: auto !important;
 			white-space: pre-line !important;
-
 		}
 		.dropdown-btn{
 			padding: 0;
@@ -31,9 +29,9 @@
     		height: 25px !important;
 		}
 	</style>
+    
 </head>
 <!-- set time out -->
-
 <body class="has-navbar-fixed-top">
 
 	<section class="section ">
@@ -56,14 +54,13 @@
 									<a class="has-text-white">Hello a@abc.com</a>
 								</div-->
 								<div id="currenttime" class="navbar-item has-text-white">Current Time</div>
-
+								
 							</div>
 						</nav>
 					</div>
-				</div>
+				</div>	
 			</div>
-			<nav class="panel has-text-white has-background-white panel-default">
-				<!-- <p class="panel-heading ">Playback Setting</p> -->
+			<nav class="panel has-text-white has-background-white">
 				<div class="panel-heading ">
 					
 					Playback Setting
@@ -105,12 +102,11 @@
 								</a>
 								<a>
 									<span id="d3h" class="tag is-medium">3hr
-									</span>
+									</span>	
 								</a>
 								<span class="tag has-background-white">
-									<input id="hr-input" class="input" type="text" value="1"
-										placeholder="Custom: e.g. 2, 3.5">
-								</span>
+									<input id="hr-input" class="input" type="text" value="1" placeholder="Custom: e.g. 2, 3.5">
+								</span>	
 								hr
 							</div>
 						</div>
@@ -124,13 +120,13 @@
 							</div>
 							<div class="row">
 								<!-- <input id = "endtime" class="input" type="text" placeholder="2019-10-29 23:59:59"> -->
-								<input id="endtime" class="input" type="text" value="2019-12-04 23:59:59">
-								<button id="endtime-button" class="button">Go</button>
+								<input id = "endtime" class="input" type="text" value="2019-12-04 23:59:59">
+								<button id = "endtime-button"  class="button">Go</button>
 							</div>
 						</div>
 					</div>
 				</div>
-
+				
 				<div class="panel-block">
 					<div class="row">
 						<div class="">
@@ -141,44 +137,43 @@
 								<button id="minuesd1h" class="tag is-medium">-1hr
 								</button>
 								<span class="tag has-background-white">
-									<input id="moveintime-input" class="input" type="text"
-										placeholder="Custom: +/-0.5hr">
+									<input id = "moveintime-input" class="input" type="text" placeholder="Custom: +/-0.5hr">
 								</span>
 								<button id="plusd1h" class="tag is-medium">+1hr
 								</button>
 								<div class="row">
-									<button id="moveintime-button" class="button">Go</button>
+									<button id = "moveintime-button" class="button">Go</button>
 								</div>
 							</div>
-
+							
 						</div>
 					</div>
 				</div>
-
+				
 
 
 			</nav>
 
 			<nav class="panel has-text-white has-background-white">
-				<!--p class="panel-heading has-text-white has-background-info">Reservation Usage</p-->
+                <!--p class="panel-heading has-text-white has-background-info">Reservation Usage</p-->
 				<div class="panel-heading ">
-						Reservation Usage
-						<div class="panel-title dropdown is-hoverable is-pulled-right">
-							<div class="dropdown-trigger">
-								<button class="button dropdown-btn" aria-haspopup="true" aria-controls="dropdown-menu4">
-									<span class="icon is-small">
-										<i class="fas fa-question-circle" aria-hidden="true"></i>
-									</span>
-								</button>
-							</div>
-							<div class="dropdown-menu" id="dropdown-menu4" role="menu">
-								<div class="dropdown-content">
-									<div class="dropdown-item">
-										<p>This section shows the reserved slots and actual slot usage in the reservation, project, user levels. Color is associated with the slot usage; Block size is associated with the reserved slot</p>
-									</div>
+					Reservation Usage
+					<div class="panel-title dropdown is-hoverable is-pulled-right">
+						<div class="dropdown-trigger">
+							<button class="button dropdown-btn" aria-haspopup="true" aria-controls="dropdown-menu4">
+								<span class="icon is-small">
+									<i class="fas fa-question-circle" aria-hidden="true"></i>
+								</span>
+							</button>
+						</div>
+						<div class="dropdown-menu" id="dropdown-menu4" role="menu">
+							<div class="dropdown-content">
+								<div class="dropdown-item">
+									<p>This section shows the reserved slots and actual slot usage in the reservation, project, user levels. Color is associated with the slot usage; Block size is associated with the reserved slot</p>
 								</div>
 							</div>
 						</div>
+					</div>
 				</div>
 
 				<div class="panel-block">
@@ -196,7 +191,7 @@
 					</div>
 				</div>
 			</nav>
-
+			
 			<!--nav class="panel has-text-white has-background-white">
 				<p class="panel-heading">Search Jobs</p>
 				<div class="panel-block">
@@ -231,27 +226,30 @@
 					</span>
 				</div>
 			</nav-->
-
-
-
+			
+			
+			
 		</div>
-		<br />
+        <br/>
 		<table id="job-table" class="stripe cell-border" style="width:100%">
-			<thead>
-				<tr>
+                <thead>
+                        <tr>
 
-					<th>Job Name</th>
-					<th>User</th>
-					<th>Project</th>
-					<th>Reservation</th>
-					<th>Slots</th>
-					<th>Status</th>
-					<th>Start Time</th>
-					<th>Total Slot Time <br />(Day:Hour:Minute.Second)</th>
-				</tr>
-			</thead>
+                                <th>Job Name</th>
+                                <th>User</th>
+                                <th>Project</th>
+                                <th>Reservation</th>
+                                <th>Average <br/>Slots <br/>Used</th>
+                                <th>Status</th>
+                                <th>Start <br/>Time</th>
+                                <th>End <br/>Time</th>
+                                <th>Run <br/>Time<br/>Day.Hour.Minute</th>
+                                <th>Total Slot <br/>Time <br/>Day.Hour.Minute</th>
+                            </tr>
+                </thead>
                 
-        </table>
+                
+            </table>
 		
 		<div class="modal">
   			<div class="modal-background"></div>
@@ -328,9 +326,8 @@
   			</div>
 		</div>
 
-	</section>
-	<script src="../static/js/index.js"></script>
+    </section>
+    <script src="../static/js/index.js"></script>
 
 </body>
-
 </html>
