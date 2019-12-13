@@ -491,11 +491,11 @@ function jobList(data) {
                 jQuery(td).html(starttime.toLocaleString());
               }  
             },
-            { "data": "updated",
+            { "data": "endtime",
               "createdCell": function(td,cellData, rowData, row, col){
-                var endtime = new Date(rowData["updated"]);
-                jQuery(td).attr("data-order", rowData["updated"]);
-                jQuery(td).attr("data-sort", rowData["updated"]); 
+                var endtime = new Date(rowData["endtime"]);
+                jQuery(td).attr("data-order", rowData["endtime"]);
+                jQuery(td).attr("data-sort", rowData["endtime"]); 
                 jQuery(td).html(endtime.toLocaleString());
               }  
             },
@@ -582,7 +582,7 @@ function drawChartLine(rowData) {
 			
 		},
 		hAxis: {
-			title: 'Timeline (UTC-6)',
+			title: 'Timeline',
 			format: 'M/d/yy hh:mm:ss',
 			slantedText: true,
 			gridlines: {

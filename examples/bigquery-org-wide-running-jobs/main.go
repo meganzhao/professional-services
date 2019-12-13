@@ -545,10 +545,10 @@ func startEndTimeJobsHandler(w http.ResponseWriter, r *http.Request) {
 
 	jobs := make([]*Job, 0)
 
-	// Job start time <= start interval && job end time = null
+	// Job start time <= start interval && job end time = null and job state is running
 	jobsValid := make([]*Job, 0)
 	nullTime := time.Time{}
-	query := datastore.NewQuery("Job").Filter("Stats.EndTime =", nullTime)
+	query := datastore.NewQuery("Job").Filter("Stats.EndTime =", nullTime).Filter("Detail.State =", "Running")
 	_, err = query.GetAll(ctx, &jobsValid)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error getting jobs: %v", err), http.StatusBadRequest)
@@ -637,6 +637,10 @@ func startEndTimeJobsHandler(w http.ResponseWriter, r *http.Request) {
 				jobsDisplay[i].Elapsed = append(jobsDisplay[i].Elapsed, t.Elapsed)
 				jobsDisplay[i].SlotMillis = append(jobsDisplay[i].SlotMillis, t.SlotMillis)
 			}
+		}
+		// can take the condition out if no future job with status done and zero end time is inserted into Datastore
+		if j.Stats.EndTime.IsZero() && j.Detail.State == "Done" {
+			jobsDisplay[i].EndTime = j.Detail.Updated
 		}
 	}
 	data := struct {
@@ -1248,10 +1252,15 @@ func jobComplete(ctx context.Context, j Job) error {
 	err := datastore.Get(ctx, k, &existedJob)
 	if err != nil {
 		log.Debugf(ctx, "Can't retrieve job entry from Datastore")
+	}	
+	if j.Stats.EndTime.IsZero() {
+		existedJob.Stats.EndTime = j.Detail.Updated
+	} else {
+		existedJob.Stats.EndTime = j.Stats.EndTime
 	}
-	existedJob.Stats.EndTime = j.Stats.EndTime
 	existedJob.Detail.Error = j.Detail.Error
 	existedJob.Detail.State = "Done"
+
 	log.Debugf(ctx, "Saving %v to Datastore\n", j.Name.String())
 	if _, err := datastore.Put(ctx, k, &existedJob); err != nil {
 		return err
