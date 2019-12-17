@@ -47,7 +47,7 @@ Being able to observe a current list of running jobs can be important for those 
 ## Prerequisites
 
 
-## Setup
+## Setup (Original)
 
 #### Configure Org-wide Log Export for BigQuery Queries
 
@@ -74,6 +74,21 @@ Being able to observe a current list of running jobs can be important for those 
 
 * Create a subscription on the topic used as the destination for the org-wide log export.
     * Set the type to push, and configure the URL to: ```https://[PROJECT_ID].appspot.com/_ah/push-handlers/bqo-pusher```
+
+
+## Setup (Updated)
+#### IAM
+* Create a custom role (custome role is organization-wide) with bigquery.jobs.get and bigquery.jobs.list permission. Assign that custom role to app engine service account within each project of the organization
+#### Set up reservation table
+* In the file _config.json_, change "anand-bq-test-2.Anand_BQ_Test_1.reservation_slot" to the reservation table name in BigQuery. change "reservation_id, project_id, reservation_slot" to the column names of reservation id, project id, and the reserved slots.
+* To copy the BigQuery reservation table into Datastore, call the endpoint https://[PROJECT_ID].appspot.com/update-reservation-table
+#### Run Terraform scripts
+* Update the project and domain in _tf/terraform.tfvars_ 
+#### Call API endpoint to start the app engine task queue which updates the job info every 5 secs
+https://[PROJECT_ID].appspot.com/_ah/push-handlers/update-projects-all
+#### Deploy app
+* Use ```gcloud app deploy``` to deploy the app using GAE best practices.
+
 
 ## View UI
 
