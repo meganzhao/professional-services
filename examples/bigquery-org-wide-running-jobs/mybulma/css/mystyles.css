@@ -3798,7 +3798,7 @@ a.tag:hover {
 .dropdown-menu {
   display: none;
   left: 0;
-  min-width: 12rem;
+  min-width: 45rem;
   padding-top: 4px;
   position: absolute;
   top: 100%;

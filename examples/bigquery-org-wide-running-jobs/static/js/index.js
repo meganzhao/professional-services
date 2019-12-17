@@ -174,7 +174,9 @@ function moveinTime(sign, hr) {
 	} else {
 		newEndTimeDate = new Date(endTimeMills - hr * 60 * 60 * 1000);
 	}
-	if (startEndTimeEndpoint(newEndTimeDate)){
+	UTCEndTime = new Date(newEndTimeDate.getTime() + timeZoneOffset * 60 * 1000)
+	console.log(UTCEndTime.toISOString())
+	if (startEndTimeEndpoint(UTCEndTime)){
 		newEndTimeDateStr = newEndTimeDate.toISOString()
 		newEndTimeDateStr = newEndTimeDateStr.slice(0,10) + " " + newEndTimeDateStr.slice(11, 19)
 		jQuery("#endtime").val(newEndTimeDateStr);
