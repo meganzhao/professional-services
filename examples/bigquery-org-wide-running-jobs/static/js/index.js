@@ -292,6 +292,7 @@ function callAPI() {
 }
 
 var jsonSaveData;
+var selectedReservation, selectedProject, selectedUser;
 function drawReservationChart(jsonData) {
     jsonSaveData = jsonData;
 	var data = google.visualization.arrayToDataTable(reservationUsage(jsonData));
@@ -301,8 +302,9 @@ function drawReservationChart(jsonData) {
 		midColor: '#FFBF00',
 		maxColor: '#D2222D',
 		headerHeight: 25,
-		fontColor: 'black'
-		, showScale: true
+		fontColor: 'black',
+        showScale: true,
+        tooltip: {isHtml: true},
 	});
 
 	google.visualization.events.addListener(tree, 'select', function () {
@@ -319,18 +321,37 @@ function drawReservationChart(jsonData) {
             ', ' + data.getValue(row, 3);
             console.log(value);
             if (parentNode == 'all') {
+                selectedReservation = selectedNode;
                 filterData = jsonSaveData;
                 filterData = filterData.filter(function(record) {
-                    return record.reservationid == selectedNode;
+                    return record.reservationid == selectedReservation;
                 });
                 jobList(filterData);
+            } else if (parentNode == selectedReservation){
+                selectedProject = selectedNode;
+                filterData = jsonSaveData;
+                filterData = filterData.filter(function(record) {
+                    return (record.reservationid == selectedReservation && record.projectid == selectedProject);
+                });
+                jobList(filterData);
+            } else if (parentNode == selectedProject){
+                selectedUser = selectedNode.split('/')[1];
+                filterData = jsonSaveData;
+                filterData = filterData.filter(function(record) {
+                    return (record.reservationid == selectedReservation && 
+                        record.projectid == selectedProject &&
+                        record.useremail == selectedUser);
+                });
+                jobList(filterData); 
             } else {
-                jobList(jsonSaveData);
+                jobList(jsonSaveData);                    
             }
-			//alert('The user selected ' + value);
-			/*
-			alert(
-	'' + data.getValue(row, 0) +
+                
+        }
+//alert('The user selected ' + value);
+/*
+	alert(
+    '' + data.getValue(row, 0) +
 	', ' + data.getValue(row, 1) + 
 	', ' + data.getValue(row, 2) +
 	', ' + data.getValue(row, 3) + 
@@ -341,7 +362,7 @@ function drawReservationChart(jsonData) {
 	', ' + data.getColumnLabel(3) + 
 	': ' + value );
 	*/
-		}
+
 	});
 }
 
@@ -381,7 +402,7 @@ function reservationUsage(jsonData) {
 			}			
 			
 			arr.push([{v: projectId, f: projectId + 
-				" (Reserved slots: " + slotsbyProject.toFixed(2) + "; slotUsage: " + 
+				" (Reserved slots: " + slotsbyProject.toFixed(2) + ";<br/> slotUsage: " + 
 				(slotUsagebyProject / slotsbyProject * 100).toFixed(2) + "%; number of users: " + 
 				Object.keys(groupbyUser).length + ")"}, 
 				reservationId, 0, 0]);
