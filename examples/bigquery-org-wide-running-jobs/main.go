@@ -30,8 +30,7 @@ import (
 
 const shortLivedJobMaxAge time.Duration = 10 * time.Minute
 
-//os.Getenv("GOOGLE_CLOUD_PROJECT")
-
+// ReservationConfig table configuration (Table name and ColumnNames)
 type ReservationConfig struct {
 	ReservationTableName    string
 	ReservationColumneNames string
@@ -39,30 +38,35 @@ type ReservationConfig struct {
 
 var reservationConfig ReservationConfig
 
+//JobName structure to hold jobid, location, project id
 type JobName struct {
-	JobId     string `json:"jobId"`
+	JobID     string `json:"jobId"`
 	Location  string `json:"location"`
-	ProjectId string `json:"projectId"`
+	ProjectID string `json:"projectId"`
 }
 
 func (j JobName) String() string {
-	return fmt.Sprintf("[%s] %s:%s", j.Location, j.ProjectId, j.JobId)
+	return fmt.Sprintf("[%s] %s:%s", j.Location, j.ProjectID, j.JobID)
 }
 
+//JobKey formats JobKey
 func JobKey(l string, p string, j string) string {
 	return fmt.Sprintf("[%s] %s:%s", l, p, j)
 }
 
+//BqJobKey formats BqJobKey
 func BqJobKey(j *bigquery.Job, p string) string {
 	return JobKey(j.Location(), p, j.ID())
 }
 
+//Reservation Structure to hold reservation data
 type Reservation struct {
-	Reservation_ID   string
-	Project_ID       string
-	Reservation_Slot int64
+	ReservationID   string
+	ProjectID       string
+	ReservationSlot int64
 }
 
+//JobDetail structure hold job details
 type JobDetail struct {
 	Type          string // Load, Query, Extract
 	State         string
@@ -80,6 +84,7 @@ type JobDetail struct {
 	Slots         int64
 }
 
+//TimelineSample structure hold job timeline data
 type TimelineSample struct {
 	ActiveUnits    int64
 	CompletedUnits int64
@@ -88,12 +93,14 @@ type TimelineSample struct {
 	SlotMillis     int64
 }
 
+//JobStatistics structure hold job statistics
 type JobStatistics struct {
 	CreateTime time.Time `json:"createTime,string"`
 	EndTime    time.Time `json:"endTime,string"`
 	StartTime  time.Time `json:"startTime,string"`
 }
 
+//PushRequest structure hold push request
 type PushRequest struct {
 	Message struct {
 		Attributes map[string]string
@@ -103,7 +110,8 @@ type PushRequest struct {
 	Subscription string
 }
 
-type JobJson struct {
+//JobJSON structure holds json data for jobs
+type JobJSON struct {
 	ProtoPayload struct {
 		AuthenticationInfo struct {
 			UserEmail string `json:"principalEmail"`
@@ -125,30 +133,35 @@ type JobJson struct {
 	} `json:"protoPayload"`
 }
 
-func (j JobJson) IsInsert() bool {
-	return j.ProtoPayload.ServiceData.JobInsertResponse.Resource.JobName.JobId != ""
+//IsInsert returns if job needs to be inserted
+func (j JobJSON) IsInsert() bool {
+	return j.ProtoPayload.ServiceData.JobInsertResponse.Resource.JobName.JobID != ""
 }
 
-func (j JobJson) IsComplete() bool {
-	return j.ProtoPayload.ServiceData.JobCompletedEvent.Job.JobName.JobId != ""
+//IsComplete returns if job is completed
+func (j JobJSON) IsComplete() bool {
+	return j.ProtoPayload.ServiceData.JobCompletedEvent.Job.JobName.JobID != ""
 }
 
-func (j JobJson) GetJobName() JobName {
+//GetJobName returns the job name
+func (j JobJSON) GetJobName() JobName {
 	if j.IsInsert() {
 		return j.ProtoPayload.ServiceData.JobInsertResponse.Resource.JobName
-	} else {
-		return j.ProtoPayload.ServiceData.JobCompletedEvent.Job.JobName
 	}
+	return j.ProtoPayload.ServiceData.JobCompletedEvent.Job.JobName
+
 }
 
-func (j JobJson) GetJobStatistics() JobStatistics {
+//GetJobStatistics returns the job statistics
+func (j JobJSON) GetJobStatistics() JobStatistics {
 	if j.IsInsert() {
 		return j.ProtoPayload.ServiceData.JobInsertResponse.Resource.JobStatistics
-	} else {
-		return j.ProtoPayload.ServiceData.JobCompletedEvent.Job.JobStatistics
 	}
+	return j.ProtoPayload.ServiceData.JobCompletedEvent.Job.JobStatistics
+
 }
 
+//Job structure holds the job object
 type Job struct {
 	Name      JobName
 	UserEmail string
@@ -156,18 +169,21 @@ type Job struct {
 	Detail    JobDetail
 }
 
+//LastTimeline returns the job last time
 func (j Job) LastTimeline() TimelineSample {
 	if len(j.Detail.Timeline) > 0 {
 		return j.Detail.Timeline[len(j.Detail.Timeline)-1]
-	} else {
-		return TimelineSample{}
 	}
+	return TimelineSample{}
+
 }
 
-func (j Job) GetId() string {
+//GetID formats the jobid
+func (j Job) GetID() string {
 	return fmt.Sprintf("%x", sha256.Sum256([]byte(j.Name.String())))
 }
 
+//Bytes get bytes
 func (j Job) Bytes() ([]byte, error) {
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
@@ -177,6 +193,7 @@ func (j Job) Bytes() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+//StateString retuns state of job
 func StateString(s bigquery.State) string {
 	switch s {
 	case bigquery.Running:
@@ -216,6 +233,7 @@ func StateString(s bigquery.State) string {
 // 	Slots          int64	 `json:"slots,number"`
 // }
 
+//JobDisplay returns job for display
 type JobDisplay struct {
 	UserEmail      string    `json:"useremail"`
 	CreateTime     time.Time `json:"createtime,datetime"`
@@ -241,14 +259,16 @@ type JobDisplay struct {
 	//SlotMillis     []int64     `json:"slotmillis,number"`
 	Updated       time.Time `json:"updated,datetime"`
 	ReservationID string    `json:"reservationid"`
-	Slots         int64   `json:"slots,number"`
+	Slots         int64     `json:"slots,number"`
 }
 
+//DisplayField returns name and id of the job
 type DisplayField struct {
 	Name string `json:"name"`
-	Id   string `json:"id"`
+	ID   string `json:"id"`
 }
 
+//GetJobDisplayFields returns the job display strings
 func GetJobDisplayFields() []DisplayField {
 	dummy := JobDisplay{}
 	val := reflect.ValueOf(dummy)
@@ -262,7 +282,8 @@ func GetJobDisplayFields() []DisplayField {
 	return fields
 }
 
-func (j *Job) GetDetail(bqj *bigquery.Job, bqc *bigquery.Client, ctx context.Context) error {
+//GetDetail returns job details
+func (j *Job) GetDetail(ctx context.Context, bqj *bigquery.Job, bqc *bigquery.Client) error {
 	status := bqj.LastStatus()
 	log.Debugf(ctx, "bgj.Email(): %v", bqj.Email())
 	detail := JobDetail{
@@ -277,7 +298,7 @@ func (j *Job) GetDetail(bqj *bigquery.Job, bqc *bigquery.Client, ctx context.Con
 
 	// Potential to improve performance by only query when insert job (not update job)
 
-	key := datastore.NewKey(ctx, "Reservation", j.Name.ProjectId, 0, nil)
+	key := datastore.NewKey(ctx, "Reservation", j.Name.ProjectID, 0, nil)
 	reservation := new(Reservation)
 	log.Debugf(ctx, "reservation debug, datastore key: %v", key)
 	err := datastore.Get(ctx, key, reservation)
@@ -285,13 +306,13 @@ func (j *Job) GetDetail(bqj *bigquery.Job, bqc *bigquery.Client, ctx context.Con
 		log.Errorf(ctx, "Line 243, can't get from datastore: %v", err)
 	}
 
-	detail.ReservationID = reservation.Reservation_ID
-	detail.Slots = int64(reservation.Reservation_Slot)
+	detail.ReservationID = reservation.ReservationID
+	detail.Slots = int64(reservation.ReservationSlot)
 	log.Debugf(ctx, "detail.ReservvationID: %v", detail.ReservationID)
 
 	config, err := bqj.Config()
 	if err != nil {
-		return fmt.Errorf("Error getting config: %v\n", err)
+		return fmt.Errorf("Error getting config: %v", err)
 	}
 	switch config.(type) {
 	case *bigquery.QueryConfig:
@@ -344,7 +365,7 @@ func (j *Job) GetDetail(bqj *bigquery.Job, bqc *bigquery.Client, ctx context.Con
 		}
 		detail.Dst = loadConfig.Dst.FullyQualifiedName()
 	default:
-		return fmt.Errorf("Unable to identify Config of type %T\n", config)
+		return fmt.Errorf("Unable to identify Config of type %T", config)
 	}
 	j.Detail = detail
 	return nil
@@ -378,7 +399,8 @@ func getBqClient(ctx context.Context, p string) (*bigquery.Client, error) {
 	return bqc, nil
 }
 
-func gcJsonDate(t time.Time) string {
+//gcJSONDate formats json date
+func gcJSONDate(t time.Time) string {
 	return fmt.Sprintf("Date(%d, %d, %d, %d, %d, %d)", t.Year(), t.Month()-1, t.Day(), t.Hour(), t.Minute(), t.Second())
 }
 
@@ -406,118 +428,6 @@ func domainCheck(next http.Handler) http.Handler {
 			http.Error(w, "Forbidden", http.StatusForbidden)
 		}
 	})
-}
-
-func main() {
-	// Read config.json for reservation BQ table
-	file, _ := os.Open("config.json")
-	defer file.Close()
-	decoder := json.NewDecoder(file)
-	// reservationConfig := ReservationConfig{}
-	err := decoder.Decode(&reservationConfig)
-	if err != nil {
-		fmt.Println("error:", err)
-	}
-
-	bqClients = make(map[string]*bigquery.Client, 0)
-	nackCounts = map[string]int{}
-	templates = template.New("").Funcs(template.FuncMap{"gcJsonDate": gcJsonDate})
-	jobDisplayFields = GetJobDisplayFields()
-	lastDebugPayload = []byte{}
-
-	// Uncomment and change domain if you would like to limit users who access to certain domain accounts.
-	//domainRegex = regexp.MustCompile(`@google.com$`)
-
-	var dir string
-
-	flag.StringVar(&dir, "dir", ".", "the directory to serve files from. Defaults to the current dir")
-	flag.Parse()
-
-	r := mux.NewRouter()
-
-	// Uncomment to make use of above regex.
-	//r.Use(domainCheck)
-
-	r.HandleFunc("/update-reservation-table", updateReservationHandler)
-
-	r.HandleFunc("/_ah/push-handlers/bqo-pusher", pushHandler)
-
-	r.HandleFunc("/_ah/push-handlers/update-projects/{project_id}", updateProjectJobsHandler)
-
-	r.HandleFunc("/_ah/push-handlers/update-projects-all", updateAllProjectsHandler)
-
-	r.HandleFunc("/_ah/get-handlers/v1/jobs", jobsHandler)
-
-	r.HandleFunc("/_ah/get-handlers/v1/jobid/{jobid}", jobIdHandler)
-
-	r.HandleFunc("/_ah/get-handlers/v1/jobs/{start-time}/{end-time}", startEndTimeJobsHandler)
-
-	r.HandleFunc("/stats", statsHandler)
-
-	r.HandleFunc("/testJobs", testJobsHandler)
-
-	// r.HandleFunc("/", listHandler)
-
-	// This will serve files under http://localhost:8000/static/<filename>
-	r.PathPrefix("/static/").Handler(http.FileServer(http.Dir(dir)))
-
-	http.Handle("/", r)
-
-	appengine.Main()
-
-}
-func testJobsHandler(w http.ResponseWriter, r *http.Request) {
-	// jobsDisplay := make([]*JobDisplay, len(jobs))
-	// activeunits := make([]int64, 0)
-	// completedunits := make([]int64, 0)
-	// pendingunits := make([]int64, 0)
-	// elapsed := make([]int64, 0)
-	// slotmillis := make([]int64, 0)
-
-	layout := "2006-01-02T15:04:05.000Z"
-	str := "2014-11-12T11:45:26.371Z"
-	t, err := time.Parse(layout, str)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Error getting starttime: %v", err), http.StatusBadRequest)
-		return
-	}
-	var jobsDisplay = &JobDisplay{
-		"a@b.com",
-		t,
-		t,
-		t,
-		"anand-bq-test-2",
-		"bquijob_0113hskhd_3933kad",
-		"US",
-		[]int64{1, 3, 4, 5, 6},
-		[]int64{1, 4, 5, 6, 7},
-		[]int64{7, 5, 4, 2, 1},
-		[]int64{1, 2, 3, 4, 5},
-		[]int64{100, 200, 400, 600, 800},
-		"Query",
-		"Running",
-		"",
-		"a@bc.com",
-		"helixdata2:helix.jobs_partitioned_stream",
-		"anand-bq-test-1:_602636a7aa3648bf43185c0776d8e3ed6ecad4e5.anonc5aa7ef2_363e_4039_93b4_f02394288901",
-		"INTERACTIVE",
-		"SELECT",
-		`with Jobs as ( 
-			SELECT *, 
-			) `,
-		//j.Detail.SlotMillis,
-		t,
-		"/pac/test/reservation/",
-		200,
-	}
-
-	ctx := appengine.NewContext(r)
-	k := datastore.NewKey(ctx, "Job", jobsDisplay.Dst, 0, nil)
-	if _, err := datastore.Put(ctx, k, jobsDisplay); err != nil {
-		log.Errorf(ctx, "Couldn't insert into Datastore: %v\n", err)
-		w.Write([]byte("error"))
-	}
-
 }
 
 func startEndTimeJobsHandler(w http.ResponseWriter, r *http.Request) {
@@ -607,8 +517,8 @@ func startEndTimeJobsHandler(w http.ResponseWriter, r *http.Request) {
 			j.Stats.CreateTime,
 			j.Stats.StartTime,
 			j.Stats.EndTime,
-			j.Name.ProjectId,
-			j.Name.JobId,
+			j.Name.ProjectID,
+			j.Name.JobID,
 			j.Name.Location,
 			activeunits,
 			completedunits,
@@ -660,13 +570,13 @@ func startEndTimeJobsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func jobIdHandler(w http.ResponseWriter, r *http.Request) {
+func jobIDHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Access-Control-Allow-Origin", "*")
 	w.Header().Add("Content-Type", "text/csv")
 
 	ctx := appengine.NewContext(r)
-	jobId := strings.TrimPrefix(r.URL.Path, "/_ah/get-handlers/v1/jobid/")
-	query := datastore.NewQuery("Job").Filter("Name.JobId =", jobId)
+	jobID := strings.TrimPrefix(r.URL.Path, "/_ah/get-handlers/v1/jobid/")
+	query := datastore.NewQuery("Job").Filter("Name.JobId =", jobID)
 	jobs := make([]*Job, 0)
 	_, err := query.GetAll(ctx, &jobs)
 	if err != nil {
@@ -685,8 +595,8 @@ func jobIdHandler(w http.ResponseWriter, r *http.Request) {
 			j.Stats.CreateTime,
 			j.Stats.StartTime,
 			j.Stats.EndTime,
-			j.Name.ProjectId,
-			j.Name.JobId,
+			j.Name.ProjectID,
+			j.Name.JobID,
 			j.Name.Location,
 			activeunits,
 			completedunits,
@@ -759,8 +669,8 @@ func jobsHandler(w http.ResponseWriter, r *http.Request) {
 			j.Stats.CreateTime,
 			j.Stats.StartTime,
 			j.Stats.EndTime,
-			j.Name.ProjectId,
-			j.Name.JobId,
+			j.Name.ProjectID,
+			j.Name.JobID,
 			j.Name.Location,
 			activeunits,
 			completedunits,
@@ -845,49 +755,24 @@ func updateAllProjectsHandler(w http.ResponseWriter, r *http.Request) {
 
 func updateProjectJobsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
-	projectId := strings.TrimPrefix(r.URL.Path, "/_ah/push-handlers/update-projects/")
-	log.Debugf(ctx, "Updating jobs for %v\n", projectId)
-	if err := updateProjectJobs(ctx, projectId); err != nil {
+	projectID := strings.TrimPrefix(r.URL.Path, "/_ah/push-handlers/update-projects/")
+	log.Debugf(ctx, "Updating jobs for %v\n", projectID)
+	if err := updateProjectJobs(ctx, projectID); err != nil {
 		http.Error(w, fmt.Sprintf("Error updating Jobs: %v", err), http.StatusBadRequest)
 		log.Errorf(ctx, "Error updating Jobs: %v", err)
 	}
-	log.Debugf(ctx, "Finished updating jobs for %v\n", projectId)
+	log.Debugf(ctx, "Finished updating jobs for %v\n", projectID)
 	//fmt.Fprintf(w, "OK")
 	return
 }
 
 type templateIndexData struct {
-	OrgId          string
+	OrgID          string
 	User           *user.User
 	Title          string
 	Fields         []DisplayField
 	UpdateInterval string
 }
-
-// func listHandler(w http.ResponseWriter, r *http.Request) {
-// 	ctx := appengine.NewContext(r)
-// 	u := user.Current(ctx)
-// 	t := template.New("Bq Observer")
-// 	t, err := t.ParseFiles("./template/index.html")
-// 	if err != nil {
-// 		http.Error(w, fmt.Sprintf("Coulnd't load template: %v", err), http.StatusBadRequest)
-// 		log.Errorf(ctx, "Couldn't load template: %v\n", err)
-// 		return
-// 	}
-// 	data := templateIndexData{
-// 		"1",
-// 		u,
-// 		"Job List",
-// 		jobDisplayFields,
-// 		"10000",
-// 	}
-// 	if err = t.ExecuteTemplate(w, "index.html", data); err != nil {
-// 		http.Error(w, fmt.Sprintf("Coulnd't print template: %v", err), http.StatusBadRequest)
-// 		log.Errorf(ctx, "Couldn't print template: %v\n", err)
-// 	}
-
-// 	return
-// }
 
 func statsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
@@ -937,7 +822,7 @@ func printProjects(ctx context.Context, w http.ResponseWriter) error {
 	}
 	fmt.Fprintln(w, "Projects:")
 	for _, j := range projects {
-		fmt.Fprintf(w, "%s\n", j.Name.ProjectId)
+		fmt.Fprintf(w, "%s\n", j.Name.ProjectID)
 	}
 	return nil
 }
@@ -974,8 +859,8 @@ func updateReservationHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for {
-		var reservation_obj Reservation
-		err := itReservation.Next(&reservation_obj)
+		var reservationObj Reservation
+		err := itReservation.Next(&reservationObj)
 		if err == iterator.Done {
 			break
 		}
@@ -983,13 +868,13 @@ func updateReservationHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("error:", err)
 		}
 		reservation := &Reservation{
-			Reservation_ID:   reservation_obj.Reservation_ID,
-			Project_ID:       reservation_obj.Project_ID,
-			Reservation_Slot: reservation_obj.Reservation_Slot,
+			ReservationID:   reservationObj.ReservationID,
+			ProjectID:       reservationObj.ProjectID,
+			ReservationSlot: reservationObj.ReservationSlot,
 		}
 
 		// Insert into Datastore
-		k := datastore.NewKey(ctx, "Reservation", reservation_obj.Project_ID, 0, nil)
+		k := datastore.NewKey(ctx, "Reservation", reservationObj.ProjectID, 0, nil)
 		if _, err := datastore.Put(ctx, k, reservation); err != nil {
 			log.Errorf(ctx, "Couldn't insert into Datastore: %v\n", err)
 			w.Write([]byte("error"))
@@ -1000,9 +885,7 @@ func updateReservationHandler(w http.ResponseWriter, r *http.Request) {
 func pushHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	msg := &PushRequest{}
-	var jobJson JobJson
-	
-	
+	var jobJSON JobJSON
 
 	if err := json.NewDecoder(r.Body).Decode(msg); err != nil {
 		http.Error(w, fmt.Sprintf("Coulnd't decode msg body: %v", err), http.StatusBadRequest)
@@ -1010,38 +893,38 @@ func pushHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Debugf(ctx, "messgage [%v] recieved from %v", msg.Message.ID, msg.Subscription)
-	if err := json.Unmarshal(msg.Message.Data, &jobJson); err != nil {
+	if err := json.Unmarshal(msg.Message.Data, &jobJSON); err != nil {
 		http.Error(w, fmt.Sprintf("Couldn't decode Job: %v", err), http.StatusBadRequest)
 		log.Errorf(ctx, "Couldn't decode job: %v\n", err)
 		return
 	}
 	// log.Debugf(ctx, "JobJson: %v", JobJson)
 	// w.Write([]byte(jsonParser.Decode(&jobJson)))
-	if jobJson.GetJobName().JobId == "" {
+	if jobJSON.GetJobName().JobID == "" {
 		http.Error(w, fmt.Sprintf("No JobID for Job"), http.StatusBadRequest)
 		log.Errorf(ctx, "No JobID for job\n")
 		return
 	}
 
-	log.Debugf(ctx, "message [%v]: %v\n", msg.Message.ID, jobJson.GetJobName().String())
-	log.Debugf(ctx, "message [%v]: %v\n", msg.Message.ID, jobJson.ProtoPayload.AuthenticationInfo.UserEmail)
+	log.Debugf(ctx, "message [%v]: %v\n", msg.Message.ID, jobJSON.GetJobName().String())
+	log.Debugf(ctx, "message [%v]: %v\n", msg.Message.ID, jobJSON.ProtoPayload.AuthenticationInfo.UserEmail)
 
 	job := Job{
-		Name:      jobJson.GetJobName(),
-		Stats:     jobJson.GetJobStatistics(),
-		UserEmail: jobJson.ProtoPayload.AuthenticationInfo.UserEmail,
+		Name:      jobJSON.GetJobName(),
+		Stats:     jobJSON.GetJobStatistics(),
+		UserEmail: jobJSON.ProtoPayload.AuthenticationInfo.UserEmail,
 	}
-	if strings.HasPrefix(job.Name.ProjectId, "google.com") {
+	if strings.HasPrefix(job.Name.ProjectID, "google.com") {
 		log.Debugf(ctx, "Msg from google.com project, ignoring")
 		lastDebugPayload = msg.Message.Data
 	}
 
-	if jobJson.IsInsert() {
+	if jobJSON.IsInsert() {
 		if err := jobInsert(ctx, job); err != nil {
 			log.Debugf(ctx, "Error inserting job: %v", err)
 			http.Error(w, fmt.Sprintf("Error inserting job: %v", err), http.StatusBadRequest)
 		}
-	} else if jobJson.IsComplete() {
+	} else if jobJSON.IsComplete() {
 		if err := jobComplete(ctx, job); err != nil {
 			log.Debugf(ctx, "Error removing job: %v\n", err)
 			http.Error(w, fmt.Sprintf("Error removing job: %v", err), http.StatusBadRequest)
@@ -1062,24 +945,24 @@ func getProjectList(ctx context.Context) ([]string, error) {
 	}
 	projects := make([]string, len(projectJobs))
 	for i, j := range projectJobs {
-		projects[i] = j.Name.ProjectId
+		projects[i] = j.Name.ProjectID
 	}
 	return projects, nil
 }
 
 func updateJob(ctx context.Context, job *Job) error {
-	bqc, err := getBqClient(ctx, job.Name.ProjectId)
+	bqc, err := getBqClient(ctx, job.Name.ProjectID)
 	if err != nil {
 		return err
 	}
-	j, err := bqc.JobFromIDLocation(ctx, job.Name.JobId, job.Name.Location)
+	j, err := bqc.JobFromIDLocation(ctx, job.Name.JobID, job.Name.Location)
 	if err != nil {
 		return err
 	}
 	if _, err := j.Status(ctx); err != nil {
 		log.Debugf(ctx, "Couldn't get job status: %v", err)
 	} else {
-		job.GetDetail(j, bqc, ctx)
+		job.GetDetail(ctx, j, bqc)
 	}
 	return nil
 }
@@ -1102,14 +985,14 @@ func updateProjectJobs(ctx context.Context, project string) error {
 
 	for _, job := range dsJobs {
 		// require job hosted project give app engine sa bigquery admin permission
-		j, err := bqc.JobFromID(ctx, job.Name.JobId)
+		j, err := bqc.JobFromID(ctx, job.Name.JobID)
 		if err != nil {
 			return err
 		}
 		log.Debugf(ctx, "Calling detail %v\n", j)
 		// set condition to get job detail for running jobs only
 		if job.Detail.State != "Done" {
-			job.GetDetail(j, bqc, ctx)
+			job.GetDetail(ctx, j, bqc)
 		}
 	}
 
@@ -1135,7 +1018,7 @@ func updateProjectJobs(ctx context.Context, project string) error {
 				log.Debugf(ctx, "Getting detail for %v\n", k)
 				// set condition to get job detail for running jobs only
 				if job.Detail.State != "Done" {
-					job.GetDetail(j, bqc, ctx)
+					job.GetDetail(ctx, j, bqc)
 				}
 				delete(dsJobMap, k)
 			} else {
@@ -1144,38 +1027,16 @@ func updateProjectJobs(ctx context.Context, project string) error {
 		}
 	}
 
-	// if len(dsJobMap) > 0 {
-	// 	// Detected missing job from BQ running/pending list
-	// 	deleteKeys := make([]*datastore.Key, len(dsJobMap))
-	// 	dkIdx := 0
-	// 	for k, _ := range dsJobMap {
-	// 		// Go backwards through the loop since we might remove i
-	// 		for i := len(dsJobKeys) - 1; i >= 0; i-- {
-	// 			if k == dsJobKeys[i].StringID() {
-	// 				deleteKeys[dkIdx] = dsJobKeys[i]
-	// 				dkIdx++
-	// 				dsJobKeys = append(dsJobKeys[:i], dsJobKeys[i+1:]...)
-	// 				dsJobs = append(dsJobs[:i], dsJobs[i+1:]...)
-	// 				break
-	// 			}
-	// 		}
-	// 	}
-	// 	if err := datastore.DeleteMulti(ctx, deleteKeys); err != nil {
-	// 		log.Debugf(ctx, "Error deleteing %v keys: %v", len(deleteKeys), err)
-	// 	}
-	// }
-
 	// set condition for running jobs only
 	if _, err := datastore.PutMulti(ctx, dsJobKeys, dsJobs); err != nil {
 		fmt.Printf("Error saving keys: %v\n", err)
 	}
-
 	return nil
 }
 
 func jobObservedWrite(ctx context.Context, j Job) bool {
 	item := &memcache.Item{
-		Key:        j.GetId(),
+		Key:        j.GetID(),
 		Value:      []byte{1},
 		Expiration: time.Duration(shortLivedJobMaxAge),
 	}
@@ -1190,7 +1051,7 @@ func jobObservedWrite(ctx context.Context, j Job) bool {
 }
 
 func jobObservedRead(ctx context.Context, j Job) bool {
-	if _, err := memcache.Get(ctx, j.GetId()); err == memcache.ErrCacheMiss {
+	if _, err := memcache.Get(ctx, j.GetID()); err == memcache.ErrCacheMiss {
 		return false
 	} else if err != nil {
 		log.Errorf(ctx, "Memcache returned error checking for job: %v\n", err)
@@ -1211,7 +1072,7 @@ func jobInsert(ctx context.Context, j Job) error {
 	}
 	if j.UserEmail == "" {
 		log.Debugf(ctx, "No user email for job insert, skipping insert\n")
-		// return nil		
+		// return nil
 	}
 	if j.Detail.State == "Done" {
 		log.Debugf(ctx, "Job complete, skipping insert\n")
@@ -1247,11 +1108,10 @@ func jobComplete(ctx context.Context, j Job) error {
 				log.Debugf(ctx, "Nacked message %v times, acking", nackCounts[j.Name.String()])
 				delete(nackCounts, j.Name.String())
 				return nil
-			} else {
-				nackCounts[j.Name.String()]++
-				log.Debugf(ctx, "Job complete nacked: End time: %v, Now: %v", j.Stats.EndTime, time.Now())
-				return fmt.Errorf("Job Complete found for un-inserted Job: %v\n", j.Name.String())
 			}
+			nackCounts[j.Name.String()]++
+			log.Debugf(ctx, "Job complete nacked: End time: %v, Now: %v", j.Stats.EndTime, time.Now())
+			return fmt.Errorf("Job Complete found for un-inserted Job: %v", j.Name.String())
 		}
 	}
 
@@ -1259,7 +1119,7 @@ func jobComplete(ctx context.Context, j Job) error {
 	err := datastore.Get(ctx, k, &existedJob)
 	if err != nil {
 		log.Debugf(ctx, "Can't retrieve job entry from Datastore")
-	}	
+	}
 	if j.Stats.EndTime.IsZero() {
 		existedJob.Stats.EndTime = j.Detail.Updated
 	} else {
@@ -1278,4 +1138,43 @@ func jobComplete(ctx context.Context, j Job) error {
 	// 	return err
 	// }
 	return nil
+}
+func main() {
+	// Read config.json for reservation BQ table
+	file, _ := os.Open("config.json")
+	defer file.Close()
+	decoder := json.NewDecoder(file)
+	err := decoder.Decode(&reservationConfig)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+
+	bqClients = make(map[string]*bigquery.Client, 0)
+	nackCounts = map[string]int{}
+	templates = template.New("").Funcs(template.FuncMap{"gcJsonDate": gcJSONDate})
+	jobDisplayFields = GetJobDisplayFields()
+	lastDebugPayload = []byte{}
+
+	// Uncomment and change domain if you would like to limit users who access to certain domain accounts.
+	//domainRegex = regexp.MustCompile(`@google.com$`)
+
+	var dir string
+	flag.StringVar(&dir, "dir", ".", "the directory to serve files from. Defaults to the current dir")
+	flag.Parse()
+	r := mux.NewRouter()
+
+	// Uncomment to make use of above regex.
+	//r.Use(domainCheck)
+	r.HandleFunc("/update-reservation-table", updateReservationHandler)
+	r.HandleFunc("/_ah/push-handlers/bqo-pusher", pushHandler)
+	r.HandleFunc("/_ah/push-handlers/update-projects/{project_id}", updateProjectJobsHandler)
+	r.HandleFunc("/_ah/push-handlers/update-projects-all", updateAllProjectsHandler)
+	r.HandleFunc("/_ah/get-handlers/v1/jobs", jobsHandler)
+	r.HandleFunc("/_ah/get-handlers/v1/jobid/{jobid}", jobIDHandler)
+	r.HandleFunc("/_ah/get-handlers/v1/jobs/{start-time}/{end-time}", startEndTimeJobsHandler)
+	r.HandleFunc("/stats", statsHandler)
+	// This will serve files under http://localhost:8000/static/<filename>
+	r.PathPrefix("/static/").Handler(http.FileServer(http.Dir(dir)))
+	http.Handle("/", r)
+	appengine.Main()
 }

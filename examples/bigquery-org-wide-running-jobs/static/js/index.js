@@ -213,10 +213,10 @@ function startEndTimeEndpoint(endTimeDate) {
 	var endTime = endTimeDate.toISOString();
 	var startTime = (new Date(endTimeMills - milliseconds)).toISOString();
 
-	console.log('https://anand-bq-test-2.appspot.com/_ah/get-handlers/v1/jobs/' + startTime + '/' + endTime)
+	console.log('/_ah/get-handlers/v1/jobs/' + startTime + '/' + endTime)
 	jQuery.ajax({
 		type: 'GET',
-		url: 'https://anand-bq-test-2.appspot.com/_ah/get-handlers/v1/jobs/' + startTime + '/' + endTime,
+		url: '/_ah/get-handlers/v1/jobs/' + startTime + '/' + endTime,
 		data: { get_param: 'value' },
 		dataType: 'json',
 		success: function (data) {
@@ -255,9 +255,7 @@ function startEndTimeEndpoint(endTimeDate) {
 function callAPI() {
 	jQuery.ajax({
 		type: 'GET',
-        //url: '/_ah/get-handlers/v1/jobs',
-        
-        url: 'https://anand-bq-test-2.appspot.com/_ah/get-handlers/v1/jobs',
+        url: '/_ah/get-handlers/v1/jobs',
 		data: { get_param: 'value' },
 		dataType: 'json',
 		success: function (data) {
