@@ -7,10 +7,6 @@ hljs.configure({useBR: true});
 
 */
 
-
-
-
-
 var timeZoneOffset = getTimezoneName();
 function getTimezoneName() {
     var d = new Date();
@@ -85,7 +81,6 @@ jQuery("#d2h").click(function () {
 
 jQuery("#d3h").click(function () {
     
-
 	if (!d3h) {
 		jQuery("#d3h").addClass("has-background-info has-text-white");
 		d3h = true;
@@ -120,9 +115,9 @@ jQuery("#endtime-button").click(function () {
 	localEndTime = new Date(localEndTime.slice(0, 10) + "T" + localEndTime.slice(11));
 
 	// Convert time difference
-	console.log(localEndTime)
+	//console.log(localEndTime)
 	UTCEndTime = new Date(localEndTime.getTime() + timeZoneOffset * 60 * 1000)
-	console.log(UTCEndTime.toISOString())
+	//console.log(UTCEndTime.toISOString())
     startEndTimeEndpoint(UTCEndTime);
     //jQuery("#endtime-button").removeAttr("disabled");
 
@@ -175,7 +170,7 @@ function moveinTime(sign, hr) {
 		newEndTimeDate = new Date(endTimeMills - hr * 60 * 60 * 1000);
 	}
 	UTCEndTime = new Date(newEndTimeDate.getTime() + timeZoneOffset * 60 * 1000)
-	console.log(UTCEndTime.toISOString())
+	//console.log(UTCEndTime.toISOString())
 	if (startEndTimeEndpoint(UTCEndTime)){
 		newEndTimeDateStr = newEndTimeDate.toISOString()
 		newEndTimeDateStr = newEndTimeDateStr.slice(0,10) + " " + newEndTimeDateStr.slice(11, 19)
@@ -213,7 +208,7 @@ function startEndTimeEndpoint(endTimeDate) {
 	var endTime = endTimeDate.toISOString();
 	var startTime = (new Date(endTimeMills - milliseconds)).toISOString();
 
-	console.log('/_ah/get-handlers/v1/jobs/' + startTime + '/' + endTime)
+	//console.log('/_ah/get-handlers/v1/jobs/' + startTime + '/' + endTime)
 	jQuery.ajax({
 		type: 'GET',
 		url: '/_ah/get-handlers/v1/jobs/' + startTime + '/' + endTime,
@@ -221,7 +216,7 @@ function startEndTimeEndpoint(endTimeDate) {
 		dataType: 'json',
 		success: function (data) {
             var processedData = [];
-			console.log(data.data);
+			//console.log(data.data);
 			data = cleanData(data.data);;
 			// calculat slot usage
 			for (i in data) {
@@ -237,7 +232,7 @@ function startEndTimeEndpoint(endTimeDate) {
 				}
 				processedData.push(rowData);
 			}
-			console.log(processedData)
+			//console.log(processedData)
 			// Load the Visualization API and the package and
 			// set a callback to run when the Google Visualization API is loaded.
 			google.charts.load('current', {
@@ -275,7 +270,7 @@ function callAPI() {
 				}
 				processedData.push(rowData);
 			}
-			console.log(processedData)
+			//console.log(processedData)
 			// Load the Visualization API and the package and
 			// set a callback to run when the Google Visualization API is loaded.
 			google.charts.load('current', {
@@ -317,7 +312,7 @@ function drawReservationChart(jsonData) {
             ', ' + parentNode + 
             ', ' + data.getValue(row, 2) +
             ', ' + data.getValue(row, 3);
-            console.log(value);
+            //console.log(value);
             if (parentNode == 'all') {
                 selectedReservation = selectedNode;
                 filterData = jsonSaveData;
@@ -382,6 +377,10 @@ function reservationUsage(jsonData) {
 		var slotsbyProject = slotsbyReservation / Object.keys(groupbyProject).length;
 
 		for (var projectId in groupbyProject) {
+            if (reservationId == "") {
+                reservationId = "default";
+                slotsbyReservation = 2000;
+            }
 			var groupbyUser = groupBy(groupbyProject[projectId], 'useremail');
 			var slotsbyUser = slotsbyProject / Object.keys(groupbyUser).length;
 			var slotUsagebyProject = 0;
@@ -407,14 +406,14 @@ function reservationUsage(jsonData) {
 
 			slotUsagebyReservation += slotUsagebyProject;
 		}
-
+        
 		arr.push([{v: reservationId, f: reservationId + 
 			" (Reserved slots: " + slotsbyReservation.toFixed(2) + "; slotUsage: " + 
 			(slotUsagebyReservation / slotsbyReservation * 100).toFixed(2) + "%; number of projects: " + 
 			Object.keys(groupbyProject).length + ")"}, 
 			"all", 0, 0]);
 	}
-	console.log(arr)
+	//console.log(arr)
 	return arr;
 }
 
@@ -422,7 +421,7 @@ function reservationUsage(jsonData) {
 function sum(arr, key) {
 	var total = 0;
 	if (key == "slotUsage") {
-		console.log(arr)
+		//console.log(arr)
 		for (var i = 0; i < arr.length; i++) {
 			//console.log(arr);
 			row = arr[i];
@@ -458,8 +457,13 @@ function findSlot(data, reservationId) {
 // job list section
 function jobList(data) {
     data.forEach(element => {
-        element["finalSlotUsage"] = element["slotUsage"][element["slotUsage"].length - 1];
-        element["finalSlotMS"] = element["slotmillis"][element["slotmillis"].length - 1];
+        if (element["slotmillis"].length == 0) {
+            element["finalSlotMS"] = 0;
+            element["finalSlotUsage"] = 0;
+        } else {
+            element["finalSlotMS"] = element["slotmillis"][element["slotmillis"].length - 1];
+            element["finalSlotUsage"] = element["slotUsage"][element["slotUsage"].length - 1];
+        }
         element["runTime"] = (new Date(element["updated"]) - new Date(element["starttime"]));
     });
 
