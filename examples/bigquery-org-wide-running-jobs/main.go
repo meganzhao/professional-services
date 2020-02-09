@@ -693,40 +693,6 @@ func jobsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func updateAllProjectsHandler(w http.ResponseWriter, r *http.Request) {
-	ctx := appengine.NewContext(r)
-	projects, err := getProjectList(ctx)
-
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Error retrieving project list: %v", err), http.StatusBadRequest)
-		log.Errorf(ctx, "Error retrieving project list: %v\n", err)
-	}
-
-	tasklist := make([]*taskqueue.Task, 0)
-	for _, p := range projects {
-		// filter out projects without names
-		if p != "" {
-			tasklist = append(tasklist, &taskqueue.Task{
-				Method: "GET",
-				Path:   fmt.Sprintf("/_ah/push-handlers/update-projects/%s", p),
-			})
-		}
-	}
-
-	// every 5 second populate the task queue again
-	tasklist = append(tasklist, &taskqueue.Task{
-		Method: "GET",
-		Path:   "/_ah/push-handlers/update-projects-all",
-		Delay:  time.Second * 5,
-	})
-	if _, err := taskqueue.AddMulti(ctx, tasklist, ""); err != nil {
-		http.Error(w, fmt.Sprintf("Error enqueuing tasks: %v", err), http.StatusBadRequest)
-		log.Errorf(ctx, "Error enqueuing tasks: %v\n", err)
-	}
-	//fmt.Fprintf(w, "Queued updates for %v projects\n", len(projects))
-	return
-}
-
 func updateProjectJobsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	projectID := strings.TrimPrefix(r.URL.Path, "/_ah/push-handlers/update-projects/")
@@ -911,7 +877,7 @@ func getProjectList(ctx context.Context) ([]string, error) {
 	projectJobs := make([]Job, 0)
 	_, err := datastore.NewQuery("Job").
 		// filter may slow down perf
-		// Filter("Detail.State =", "Running").
+		//Filter("Detail.State =", "Running").
 		Project("Name.ProjectId").
 		Distinct().GetAll(ctx, &projectJobs)
 	if err != nil {
@@ -1113,6 +1079,41 @@ func jobComplete(ctx context.Context, j Job) error {
 	// }
 	return nil
 }
+
+func updateAllProjectsHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+	projects, err := getProjectList(ctx)
+
+	if err != nil {
+		//http.Error(w, fmt.Sprintf("Error retrieving project list: %v", err), http.StatusBadRequest)
+		log.Errorf(ctx, "Error retrieving project list: %v\n", err)
+	}
+
+	tasklist := make([]*taskqueue.Task, 0)
+	for _, p := range projects {
+		// filter out projects without names
+		if p != "" {
+			tasklist = append(tasklist, &taskqueue.Task{
+				Method: "GET",
+				Path:   fmt.Sprintf("/_ah/push-handlers/update-projects/%s", p),
+			})
+		}
+	}
+
+	// every 15 second populate the task queue again
+	tasklist = append(tasklist, &taskqueue.Task{
+		Method: "GET",
+		Path:   "/_ah/push-handlers/update-projects-all",
+		Delay:  time.Second * 15,
+	})
+	if _, err := taskqueue.AddMulti(ctx, tasklist, ""); err != nil {
+		//http.Error(w, fmt.Sprintf("Error enqueuing tasks: %v", err), http.StatusBadRequest)
+		log.Errorf(ctx, "Error enqueuing tasks: %v\n", err)
+	}
+	//fmt.Fprintf(w, "Queued updates for %v projects\n", len(projects))
+	return
+}
+
 func main() {
 	// Read config.json for reservation BQ table
 	file, _ := os.Open("config.json")
