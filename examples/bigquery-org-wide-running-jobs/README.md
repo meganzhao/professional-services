@@ -106,3 +106,6 @@ https://[PROJECT_ID].appspot.com/_ah/push-handlers/update-projects-all
 ## TODO
 
 * Add BQ Reservation if available
+* Create a Firestore purge API
+* Include job start time and create time to track how long the job was in the queue
+* Create demo samples for API for analytics
