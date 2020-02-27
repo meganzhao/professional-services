@@ -23,7 +23,7 @@ import (
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
-	"google.golang.org/appengine/memcache"
+	// "google.golang.org/appengine/memcache"
 	"google.golang.org/appengine/taskqueue"
 	"google.golang.org/appengine/user"
 )
@@ -718,9 +718,9 @@ func statsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	fmt.Fprintf(w, "<head><body>")
 	fmt.Fprintf(w, "<pre>")
-	if err := printMemcacheStats(ctx, w); err != nil {
-		fmt.Fprintf(w, "Error getting memcache stats: %v\n", err)
-	}
+	// if err := printMemcacheStats(ctx, w); err != nil {
+	// 	fmt.Fprintf(w, "Error getting memcache stats: %v\n", err)
+	// }
 	if err := printDatastoreJobs(ctx, w); err != nil {
 		fmt.Fprintf(w, "Error getting datastore jobs: %v\n", err)
 	}
@@ -737,20 +737,20 @@ func statsHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "</pre></body>")
 }
 
-func printMemcacheStats(ctx context.Context, w http.ResponseWriter) error {
-	ms, err := memcache.Stats(ctx)
-	if err != nil {
-		return err
-	}
-	fmt.Fprintf(w, "Stats:")
-	fmt.Fprintf(w, "\tHits %v\n", ms.Hits)
-	fmt.Fprintf(w, "\tMisses %v\n", ms.Misses)
-	fmt.Fprintf(w, "\tByteHits %v\n", ms.ByteHits)
-	fmt.Fprintf(w, "\tItems %v\n", ms.Items)
-	fmt.Fprintf(w, "\tBytes %v\n", ms.Bytes)
-	fmt.Fprintf(w, "\tOldest %v\n", ms.Oldest)
-	return nil
-}
+// func printMemcacheStats(ctx context.Context, w http.ResponseWriter) error {
+// 	ms, err := memcache.Stats(ctx)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	fmt.Fprintf(w, "Stats:")
+// 	fmt.Fprintf(w, "\tHits %v\n", ms.Hits)
+// 	fmt.Fprintf(w, "\tMisses %v\n", ms.Misses)
+// 	fmt.Fprintf(w, "\tByteHits %v\n", ms.ByteHits)
+// 	fmt.Fprintf(w, "\tItems %v\n", ms.Items)
+// 	fmt.Fprintf(w, "\tBytes %v\n", ms.Bytes)
+// 	fmt.Fprintf(w, "\tOldest %v\n", ms.Oldest)
+// 	return nil
+// }
 
 func printProjects(ctx context.Context, w http.ResponseWriter) error {
 	projects := make([]Job, 0)
@@ -974,39 +974,39 @@ func updateProjectJobs(ctx context.Context, project string) error {
 	return nil
 }
 
-func jobObservedWrite(ctx context.Context, j Job) bool {
-	item := &memcache.Item{
-		Key:        j.GetID(),
-		Value:      []byte{1},
-		Expiration: time.Duration(shortLivedJobMaxAge),
-	}
-	if err := memcache.Add(ctx, item); err == memcache.ErrNotStored {
-		return true
-	} else if err != nil {
-		log.Errorf(ctx, "Memcache returned error inserting job: %v\n", err)
-		return false
-	} else {
-		return false
-	}
-}
+// func jobObservedWrite(ctx context.Context, j Job) bool {
+// 	item := &memcache.Item{
+// 		Key:        j.GetID(),
+// 		Value:      []byte{1},
+// 		Expiration: time.Duration(shortLivedJobMaxAge),
+// 	}
+// 	if err := memcache.Add(ctx, item); err == memcache.ErrNotStored {
+// 		return true
+// 	} else if err != nil {
+// 		log.Errorf(ctx, "Memcache returned error inserting job: %v\n", err)
+// 		return false
+// 	} else {
+// 		return false
+// 	}
+// }
 
-func jobObservedRead(ctx context.Context, j Job) bool {
-	if _, err := memcache.Get(ctx, j.GetID()); err == memcache.ErrCacheMiss {
-		return false
-	} else if err != nil {
-		log.Errorf(ctx, "Memcache returned error checking for job: %v\n", err)
-		return false
-	} else {
-		return true
-	}
-}
+// func jobObservedRead(ctx context.Context, j Job) bool {
+// 	if _, err := memcache.Get(ctx, j.GetID()); err == memcache.ErrCacheMiss {
+// 		return false
+// 	} else if err != nil {
+// 		log.Errorf(ctx, "Memcache returned error checking for job: %v\n", err)
+// 		return false
+// 	} else {
+// 		return true
+// 	}
+// }
 
 func jobInsert(ctx context.Context, j Job) error {
 
-	if jobObservedWrite(ctx, j) {
-		log.Debugf(ctx, "Skipping insert of observed job\n")
-		return nil
-	}
+	// if jobObservedWrite(ctx, j) {
+	// 	log.Debugf(ctx, "Skipping insert of observed job\n")
+	// 	return nil
+	// }
 	if err := updateJob(ctx, &j); err != nil {
 		log.Debugf(ctx, "Error updating job during insert: %v\n", err)
 	}
@@ -1035,7 +1035,7 @@ func jobComplete(ctx context.Context, j Job) error {
 	}
 	k := datastore.NewKey(ctx, "Job", j.Name.String(), 0, nil)
 	// Has the job been inserted?
-	if !jobObservedRead(ctx, j) {
+	// if !jobObservedRead(ctx, j) {
 		// Maybe the memcache entry expired, double check datastore:
 		var j2 Job
 		if err := datastore.Get(ctx, k, &j2); err == datastore.ErrNoSuchEntity {
@@ -1053,7 +1053,7 @@ func jobComplete(ctx context.Context, j Job) error {
 			log.Debugf(ctx, "Job complete nacked: End time: %v, Now: %v", j.Stats.EndTime, time.Now())
 			return fmt.Errorf("Job Complete found for un-inserted Job: %v", j.Name.String())
 		}
-	}
+	//}
 
 	var existedJob Job
 	err := datastore.Get(ctx, k, &existedJob)
